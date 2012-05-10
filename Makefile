@@ -1,7 +1,7 @@
 CC = gcc
 LD = gcc
 
-CFLAGS = -Wall -Wextra -g `pkg-config gtk+-2.0 --cflags`
+CFLAGS = -Wall -Wextra -g `pkg-config gtk+-2.0 --cflags` -std=c99
 CFLAGS += -Wno-unused-parameter
 LDFLAGS = $(CFLAGS) `pkg-config gtk+-2.0 --libs`
 
