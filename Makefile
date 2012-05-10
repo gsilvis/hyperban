@@ -3,6 +3,8 @@ LD = gcc
 
 CFLAGS = -Wall -Wextra -g `pkg-config gtk+-2.0 --cflags`
 CFLAGS += -Wno-unused-parameter
+CFLAGS += -march=native
+CFLAGS += -O2
 LDFLAGS = $(CFLAGS) `pkg-config gtk+-2.0 --libs`
 
 all: renderer
