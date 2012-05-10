@@ -4,7 +4,7 @@
 #include "types.h"
 
 struct graph_t {
-  struct graph_t *rotate_f;
+  struct graph_t *rotate_r;
   struct graph_t *adjacent;
   Tile *tile;
 };

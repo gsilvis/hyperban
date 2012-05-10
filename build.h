@@ -1,6 +1,8 @@
 #ifndef __HYPERBAN__BUILD_H
 #define __HYPERBAN__BUILD_H
 
+#include <stddef.h>
+
 #include "graph.h"
 
 /* Give this function a list of SavedTiles, and how many tiles long it is.

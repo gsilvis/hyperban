@@ -39,8 +39,8 @@ int perform_move (Board *b, Move move)
 
   /* There's nothing behind the box, so the box moves */
 
-  new->inhabitant->agent = AGENT_NONE;
-  behind->inhabitant->agent = AGENT_BOX;
+  new->tile->agent = AGENT_NONE;
+  behind->tile->agent = AGENT_BOX;
 
   b->graph = new;
   return b; /* Push sucessful */

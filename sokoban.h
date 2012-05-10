@@ -1,7 +1,10 @@
 #ifndef __HYPERBAN__SOKOBAN_H
 #define __HYPERBAN__SOKOBAN_H
 
+#include <stddef.h>
+
 #include "types.h"
+#include "graph.h"
 
 typedef struct {
   Graph *graph;
