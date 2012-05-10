@@ -12,6 +12,6 @@
    ALREADY been placed.
  */
 
-static Graph *build_graph (SavedTile *tiles, size_t num_tiles);
+Graph *build_graph (SavedTile *tiles, size_t num_tiles);
 
 #endif /* __HYPERBAN__BUILD_H */
