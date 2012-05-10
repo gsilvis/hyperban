@@ -15,12 +15,12 @@ int perform_move (Board *b, Move move)
 
 
   if (new->tile->tile_type == TILE_TYPE_WALL)
-    return -1; /* No move allowed */
+    return RESULT_NO_MOVE_POSSIBLE; /* No move allowed */
 
   if (new->tile->agent == AGENT_NONE)
     {
       b->graph = new; /* Walk */
-      return b;
+      return RESULT_MOVE;
     }
 
 
@@ -32,10 +32,10 @@ int perform_move (Board *b, Move move)
   behind = behind->adjacent;
 
   if (behind->tile->tile_type == TILE_TYPE_WALL) 
-    return b; /* Push blocked by wall. */
+    return RESULT_NO_MOVE_POSSIBLE; /* Push blocked by wall. */
 
   if (behind->tile->tile_type == AGENT_BOX)
-    return b; /* Push blocked by box. */
+    return RESULT_NO_MOVE_POSSIBLE; /* Push blocked by box. */
 
   /* There's nothing behind the box, so the box moves */
 
@@ -43,5 +43,5 @@ int perform_move (Board *b, Move move)
   behind->tile->agent = AGENT_BOX;
 
   b->graph = new;
-  return b; /* Push sucessful */
+  return RESULT_PUSH; /* Push sucessful */
 }

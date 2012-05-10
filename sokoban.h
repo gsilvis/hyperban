@@ -11,7 +11,13 @@ typedef struct {
   size_t unsolved;
 } Board;
 
-int perform_move (Board *g, Move move);
+typedef enum {
+  RESULT_NO_MOVE_POSSIBLE = -1,
+  RESULT_MOVE = 0,
+  RESULT_PUSH = 1,
+} move_result_t;
+
+move_result_t perform_move (Board *g, Move move);
 
 
 
