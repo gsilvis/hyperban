@@ -6,13 +6,16 @@ CFLAGS += -g
 CFLAGS += `pkg-config gtk+-2.0 --cflags`
 LDFLAGS = $(CFLAGS) `pkg-config gtk+-2.0 --libs` -lm
 
+CFILES = renderer.c build.c sokoban.c level.c
+OFILES = $(patsubst %.c, %.o, $(CFILES))
+
 all: renderer
 
-renderer: renderer.o build.o sokoban.o level.o
+renderer: $(OFILES)
 	gcc -o $@ $^ $(LDFLAGS)
 
 %.o : %.c
 	gcc -c -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f *.o renderer
+	rm -f $(OFILES) renderer
