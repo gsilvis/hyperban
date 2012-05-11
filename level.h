@@ -18,36 +18,16 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __HYPERBAN__TYPES_H
-#define __HYPERBAN__TYPES_H
+#ifndef __HYPERBAN__LEVEL_H
+#define __HYPERBAN__LEVEL_H
 
-typedef struct {
-  char tile_type;
-  char agent;
-  char dfs_use;
-} Tile;
+#include "types.h"
+#include "stdio.h"
 
-#define TILE_TYPE_SPACE 0
-#define TILE_TYPE_WALL 1
-#define TILE_TYPE_TARGET 2
-#define TILE_TYPE_DEFAULT TILE_TYPE_WALL
-
-#define AGENT_NONE 0
-#define AGENT_BOX 1
-#define AGENT_DEFAULT AGENT_NONE
-
-typedef char Move;
-
-#define MOVE_UP 0
-#define MOVE_RIGHT 1
-#define MOVE_DOWN 2
-#define MOVE_LEFT 3
-
-typedef struct {
-  char *path;
-  char tile_type;
-  char agent;
-} SavedTile;
+/* Parse a level from the file f.  Stores the number of tiles in num_tiles */
+SavedTile *level_parse_file (FILE *f, int *num_tiles, int *unsolved);
 
 
-#endif /* __HYBERBAN__TYPES_H */
+
+
+#endif /* __HYPERBAN__LEVEL_H */

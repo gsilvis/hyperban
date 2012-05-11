@@ -1,0 +1,34 @@
+# Lines beginning with # are comments.
+
+# Empty lines are ignored.
+
+# Key-value pairs can be specified like this.  Values are either integers or
+# double-quote-delimited strings.  Spaces are optional and allowed anywhere.
+# Key names are alphanumeric.
+
+!name: "George's Level"
+!difficulty: 9001
+
+# If you have one that you feel is MANDATORY [that is, if we don't know how to
+# parse it, we should fail entirely], then use two bangs, like so:
+#  !!doofus : "Allan"
+
+# Now we start making the map.  The legend for square/entity types is:
+# tile:
+#   0 space
+#   1 wall
+#   2 target
+# agent:
+#   0 none
+#   1 box
+# Each line should be "%d|%d|%s", which is parsed as tile|agent|location
+
+# I'll describe the location scheme better later.
+
+0|0|  # You can also put a comment here.
+0|1|F
+2|0|FF#or even right here   
+
+
+# Note that you can, if you so desire, intermingle the two kinds of lines.  I
+# wouldn't recommend it, though.

@@ -28,6 +28,12 @@ Graph *build_initial_node ()
   for (int i = 0; i < 4; i++)
     first[i]->rotate_r = first[(i+1) % 4];
   Tile *t = malloc(sizeof(Tile));
+
+  /* Set the Tile to the DEFAULT VALUES */
+  t->tile_type = TILE_TYPE_DEFAULT;
+  t->agent = AGENT_DEFAULT;
+  t->dfs_use = 0;
+  
   for (int i = 0; i < 4; i++)
     first[i]->tile = t;
   return first[0];
@@ -131,7 +137,8 @@ void build_add_node (Graph *graph, SavedTile *tile)
         }
     }
 
-
+  graph->tile->tile_type = tile->tile_type;
+  graph->tile->agent = tile->agent;
 
 
 

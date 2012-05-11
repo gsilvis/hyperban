@@ -8,7 +8,7 @@ LDFLAGS = $(CFLAGS) `pkg-config gtk+-2.0 --libs` -lm
 
 all: renderer
 
-renderer: renderer.o build.o sokoban.o
+renderer: renderer.o build.o sokoban.o level.o
 	gcc -o $@ $^ $(LDFLAGS)
 
 %.o : %.c
