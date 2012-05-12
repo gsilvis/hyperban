@@ -89,6 +89,9 @@ SavedTile *level_parse_file (FILE *f, int *num_tiles, int *u)
         }
     }
 
+  if (audit)
+    goto fail; /* Different number of blocks and targets: bad level. */
+
   returnee = realloc(returnee, r_used * sizeof(SavedTile));
 
   *num_tiles = r_used;
