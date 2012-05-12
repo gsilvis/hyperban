@@ -47,11 +47,12 @@ void build_enforce_convexity_left (Graph *g)
     return; /* Go away */
 
 
-  Graph *clockwise = g->rotate_r->rotate_r->rotate_r->adjacent;
+  Graph *clockwise = g->rotate_r->adjacent;
   Graph *ccwise = g->adjacent;
 
   if (!clockwise || !ccwise)
     return; /* No need to change anything */
+
 
 
   /* There are THREE present nodes around this vertex, so we want to fill in
@@ -69,7 +70,7 @@ void build_enforce_convexity_left (Graph *g)
   newcc->rotate_r->rotate_r->rotate_r->adjacent = newclock->rotate_r;
 
   /* recurse counterclockwise around the perimeter of the graph */
-  build_enforce_convexity_left(clockwise);
+  build_enforce_convexity_left(clockwise->rotate_r);
 }
 
 void build_enforce_convexity_right (Graph *g)
@@ -100,7 +101,7 @@ void build_enforce_convexity_right (Graph *g)
   newcc->rotate_r->rotate_r->rotate_r->adjacent = newclock->rotate_r;
 
   /* recurse clockwise around the perimeter of the graph */
-  build_enforce_convexity_right(ccwise);
+  build_enforce_convexity_right(ccwise->rotate_r->rotate_r->rotate_r);
 }
 
 
@@ -130,8 +131,8 @@ void build_add_node (Graph *graph, SavedTile *tile)
             {
               graph->adjacent = build_initial_node();
               graph->adjacent->adjacent = graph;
-//              build_enforce_convexity_left(graph);
-//              build_enforce_convexity_right(graph);
+              build_enforce_convexity_left(graph);
+              build_enforce_convexity_right(graph);
             }
 
           graph = graph->adjacent->rotate_r->rotate_r;
