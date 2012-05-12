@@ -57,9 +57,11 @@ static void draw_points(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, m
 }
 
 static void render_recursive(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, matrix_el_t scale, SquarePoints points, Graph *current) {
+  current->tile->dfs_use = 1;
+
   draw_points(cr, originx, originy, scale, points);
 
-  if (current->adjacent) {
+  if (current->adjacent && !current->adjacent->tile->dfs_use) {
     r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[3]));
     SquarePoints nextPoints = {
       {
@@ -70,6 +72,61 @@ static void render_recursive(cairo_t *cr, matrix_el_t originx, matrix_el_t origi
       }
     };
     render_recursive(cr, originx, originy, scale, nextPoints, current->adjacent->rotate_r->rotate_r);
+  }
+
+  if (current->rotate_r->adjacent && !current->rotate_r->adjacent->tile->dfs_use) {
+    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[1]));
+    SquarePoints nextPoints = {
+      {
+        apply_transformation(points.points[2], trans),
+        apply_transformation(points.points[3], trans),
+        points.points[1],
+        points.points[0]
+      }
+    };
+    render_recursive(cr, originx, originy, scale, nextPoints, current->rotate_r->adjacent->rotate_r);
+  }
+
+  if (current->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[1], points.points[2]));
+    SquarePoints nextPoints = {
+      {
+        points.points[1],
+        apply_transformation(points.points[3], trans),
+        apply_transformation(points.points[0], trans),
+        points.points[2]
+      }
+    };
+    render_recursive(cr, originx, originy, scale, nextPoints, current->rotate_r->rotate_r->adjacent);
+  }
+
+  if (current->rotate_r->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[2], points.points[3]));
+    SquarePoints nextPoints = {
+      {
+        points.points[3],
+        points.points[2],
+        apply_transformation(points.points[0], trans),
+        apply_transformation(points.points[1], trans)
+      }
+    };
+    render_recursive(cr, originx, originy, scale, nextPoints, current->rotate_r->rotate_r->rotate_r->adjacent->rotate_r->rotate_r->rotate_r);
+  }
+}
+
+static void clear_dfs(Graph* graph) {
+  graph->tile->dfs_use = 0;
+  if (graph->adjacent && graph->adjacent->tile->dfs_use) {
+    clear_dfs(graph->adjacent);
+  }
+  if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->dfs_use) {
+    clear_dfs(graph->rotate_r->adjacent);
+  }
+  if (graph->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+    clear_dfs(graph->rotate_r->rotate_r->adjacent);
+  }
+  if (graph->rotate_r->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+    clear_dfs(graph->rotate_r->rotate_r->rotate_r->adjacent);
   }
 }
 
@@ -97,6 +154,8 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
   cairo_stroke(cr);
 
   cairo_set_line_width(cr, 5);
+
+  clear_dfs(graph);
 
   render_recursive(cr, originx, originy, requisition.width/2, get_origin_square(), graph);
 
