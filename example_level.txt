@@ -28,8 +28,9 @@
 0|0|  # You can also put a comment here.
 0|1|F
 2|0|FF#or even right here   
-3|0|FFF
-
+0|0|FFF
+0|0|RRF
+0|0|RRFF
 
 # Note that you can, if you so desire, intermingle the two kinds of lines.  I
 # wouldn't recommend it, though.

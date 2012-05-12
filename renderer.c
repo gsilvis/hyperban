@@ -114,22 +114,6 @@ static void render_recursive(cairo_t *cr, matrix_el_t originx, matrix_el_t origi
   }
 }
 
-static void clear_dfs(Graph* graph) {
-  graph->tile->dfs_use = 0;
-  if (graph->adjacent && graph->adjacent->tile->dfs_use) {
-    clear_dfs(graph->adjacent);
-  }
-  if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->adjacent);
-  }
-  if (graph->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->rotate_r->adjacent);
-  }
-  if (graph->rotate_r->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->rotate_r->rotate_r->adjacent);
-  }
-}
-
 static gboolean on_renderer_expose_event(GtkWidget *widget,
     GdkEventExpose *event, gpointer data) {
   Graph* graph = *(Graph**)data;

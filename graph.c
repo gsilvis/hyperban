@@ -18,19 +18,21 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __HYPERBAN__GRAPH_H
-#define __HYPERBAN__GRAPH_H
+#include "graph.h"
 
-#include "types.h"
+void clear_dfs(Graph* graph) {
+  graph->tile->dfs_use = 0;
+  if (graph->adjacent && graph->adjacent->tile->dfs_use) {
+    clear_dfs(graph->adjacent);
+  }
+  if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->dfs_use) {
+    clear_dfs(graph->rotate_r->adjacent);
+  }
+  if (graph->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+    clear_dfs(graph->rotate_r->rotate_r->adjacent);
+  }
+  if (graph->rotate_r->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+    clear_dfs(graph->rotate_r->rotate_r->rotate_r->adjacent);
+  }
+}
 
-struct graph_t {
-  struct graph_t *rotate_r;
-  struct graph_t *adjacent;
-  Tile *tile;
-};
-
-typedef struct graph_t Graph;
-
-void clear_dfs(Graph* graph);
-
-#endif /* __HYPERBAN__GRAPH_H */
