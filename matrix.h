@@ -58,6 +58,11 @@ inline r4transform outer_product(r4vector a, r4vector b) {
   return result;
 }
 
+inline r4vector normalize_r4vector(r4vector a) {
+  r4vector result = { a[0]/a[3], a[1]/a[3], a[2]/a[3], 1 };
+  return result;
+}
+
 inline r4vector apply_transformation(r4vector b, r4transform a) {
   r4vector result = {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3],
@@ -65,7 +70,7 @@ inline r4vector apply_transformation(r4vector b, r4transform a) {
     a[8] * b[0] + a[9] * b[1] + a[10] * b[3] + a[11] * b[3],
     a[12] * b[0] + a[13] * b[1] + a[14] * b[3] + a[15] * b[3]
   };
-  return result;
+  return normalize_r4vector(result);
 };
 
 inline r4transform multiply_transformations(r4transform a, r4transform b) {
@@ -90,11 +95,6 @@ inline r4transform multiply_transformations(r4transform a, r4transform b) {
     a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14],
     a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]
   };
-  return result;
-}
-
-inline r4vector normalize_r4vector(r4vector a) {
-  r4vector result = { a[0]/a[3], a[1]/a[3], a[2]/a[3], 1 };
   return result;
 }
 
@@ -134,9 +134,7 @@ inline r4transform hyperbolic_reflection(r4vector a) {
   r4transform result = multiply_transformations(outer_product(a, a),
       hyperbolic_identity_transform());
 
-  result *= const_r4transform(2 / denom);
-
-  return identity_transform() - result;
+  return identity_transform() - (result * const_r4transform(2.0/denom));
 }
 
 inline r4vector hyperbolic_midpoint(r4vector a, r4vector b) {
@@ -144,13 +142,13 @@ inline r4vector hyperbolic_midpoint(r4vector a, r4vector b) {
   matrix_el_t t2 = minkowski_inner_product(b, b);
   matrix_el_t t3 = minkowski_inner_product(a, b);
 
-  matrix_el_t c1 = sqrt(t2 + t3);
-  matrix_el_t c2 = sqrt(t1 + t3);
+  matrix_el_t c1 = sqrt(t2 * t3);
+  matrix_el_t c2 = sqrt(t1 * t3);
 
-  return a * const_r4vector(c1) + b * const_r4vector(c2);
+  return normalize_r4vector(a * const_r4vector(c1) + b * const_r4vector(c2));
 }
 
-inline r4transform hyperbolic_transformation(r4vector a, r4vector b) {
+inline r4transform hyperbolic_translation(r4vector a, r4vector b) {
   r4transform rm = hyperbolic_reflection(hyperbolic_midpoint(a, b));
   r4transform ra = hyperbolic_reflection(a);
 

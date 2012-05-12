@@ -18,17 +18,15 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __HYPERBAN__GRAPH_H
-#define __HYPERBAN__GRAPH_H
+#ifndef __HYPERBAN_RENDERER_H
+#define __HYPERBAN_RENDERER_H
 
-#include "types.h"
+#include "matrix.h"
 
-struct graph_t {
-  struct graph_t *rotate_r;
-  struct graph_t *adjacent;
-  Tile *tile;
+struct square_points_t {
+  r4vector points[4];
 };
 
-typedef struct graph_t Graph;
+typedef struct square_points_t SquarePoints;
 
-#endif /* __HYPERBAN__GRAPH_H */
+#endif /* __HYPERBAN_RENDERER_H */

@@ -24,13 +24,59 @@
 #include <gtk/gtk.h>
 #include <cairo.h>
 
+#include "renderer.h"
 #include "graph.h"
 #include "matrix.h"
 #include "level.h"
 #include "build.h"
+#include "consts.h"
 
 #define RENDERER_MIN_WIDTH 480
 #define RENDERER_MIN_HEIGHT 480
+
+/* returns points in clockwise order */
+static SquarePoints get_origin_square(void) {
+  SquarePoints res = {
+    {
+      { MORE_MAGIC,  MORE_MAGIC, 0, 1},
+      { MORE_MAGIC, -MORE_MAGIC, 0, 1},
+      {-MORE_MAGIC, -MORE_MAGIC, 0, 1},
+      {-MORE_MAGIC,  MORE_MAGIC, 0, 1}
+    }
+  };
+  return res;
+}
+
+static void draw_points(cairo_t *cr, gint originx, gint originy, matrix_el_t scale, SquarePoints points) {
+  for (size_t i = 0; i < 4; i++) {
+    r4vector projected = points.points[i];
+    cairo_move_to(cr, originx+(scale*projected[0]), originy-(scale*projected[1]));
+    cairo_line_to(cr, originx+(scale*projected[0]), originy-(scale*projected[1]));
+    cairo_stroke(cr);
+  }
+}
+
+static void render_recursive(cairo_t *cr, gint originx, gint originy, matrix_el_t scale, SquarePoints points, Graph *current) {
+  draw_points(cr, originx, originy, scale, points);
+
+  if (current->adjacent) {
+    printf ("DAYUM!\n");
+    r4transform trans = hyperbolic_translation(hyperbolic_midpoint(points.points[1], points.points[2]),
+                                               hyperbolic_midpoint(points.points[0], points.points[3]));
+    SquarePoints nextPoints = {
+      {
+        apply_transformation(points.points[0], trans),
+        apply_transformation(points.points[1], trans),
+        apply_transformation(points.points[2], trans),
+        apply_transformation(points.points[3], trans)
+      }
+    };
+    for (size_t i = 0; i < 4; i++) {
+      printf("%f, %f\n", nextPoints.points[i][0], nextPoints.points[i][1]);
+    }
+    render_recursive(cr, originx, originy, scale, nextPoints, current->adjacent->rotate_r->rotate_r);
+  }
+}
 
 static gboolean on_renderer_expose_event(GtkWidget *widget,
     GdkEventExpose *event, gpointer data) {
@@ -41,6 +87,7 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
   cr = gdk_cairo_create(widget->window);
 
   cairo_set_source_rgb(cr, 0, 0, 0);
+  cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
   cairo_set_line_width(cr, 0.5);
 
   GtkRequisition requisition;
@@ -53,6 +100,11 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
   cairo_arc(cr, originx, originy, requisition.width/2, 0, 2 * M_PI);
 
   cairo_stroke(cr);
+
+  cairo_set_line_width(cr, 5);
+
+  render_recursive(cr, originx, originy, originx/2, get_origin_square(), graph);
+
   cairo_destroy(cr);
 
   return FALSE; // do not propogate event
@@ -138,7 +190,7 @@ int main(int argc, char *argv[]) {
       NULL);
 
   GtkWidget *renderer = get_renderer_widget(&graph);
-//  gtk_container_add(GTK_CONTAINER(window), renderer);
+  gtk_container_add(GTK_CONTAINER(window), renderer);
 
   gtk_widget_show_all(window);
 
