@@ -29,6 +29,20 @@ typedef matrix_el_t r4vector __attribute__ ((vector_size(sizeof(float)*4)));
 
 typedef matrix_el_t r4transform __attribute__((vector_size(sizeof(float)*4*4)));
 
+// n = rows in mat1/res, m = cols in mat1/rows in mat2, l = cols in mat2/res
+
+#define _MAT_MULT(mat1, mat2, n, m, l, res) \
+  do { \
+    for (size_t _n = 0; _n < n; _n++) { \
+      for (size_t _l = 0; _l < l; _l++) { \
+        (res)[l * _n + _l] = 0; \
+        for (size_t _m = 0; _m < m; _m++) { \
+          (res)[l * _n + _l] += (mat1)[_n * m + _m] * (mat2)[_m * l + _l]; \
+        } \
+      } \
+    } \
+  } while (0)
+
 inline r4vector const_r4vector(matrix_el_t a) {
   r4vector res = { a, a, a, a };
   return res;
@@ -49,12 +63,8 @@ inline matrix_el_t minkowski_inner_product(r4vector a, r4vector b) {
 }
 
 inline r4transform outer_product(r4vector a, r4vector b) {
-  r4transform result = {
-    a[0] * b[0], a[0] * b[1], a[0] * b[2], a[0] * b[3],
-    a[1] * b[0], a[1] * b[1], a[1] * b[2], a[1] * b[3],
-    a[2] * b[0], a[2] * b[1], a[2] * b[2], a[2] * b[3],
-    a[3] * b[0], a[3] * b[1], a[3] * b[2], a[3] * b[3]
-  };
+  r4transform result;
+  _MAT_MULT(a, b, 4, 1, 4, result);
   return result;
 }
 
@@ -63,38 +73,15 @@ inline r4vector normalize_r4vector(r4vector a) {
   return result;
 }
 
-inline r4vector apply_transformation(r4vector b, r4transform a) {
-  r4vector result = {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3],
-    a[4] * b[0] + a[5] * b[1] + a[6] * b[3] + a[7] * b[3],
-    a[8] * b[0] + a[9] * b[1] + a[10] * b[3] + a[11] * b[3],
-    a[12] * b[0] + a[13] * b[1] + a[14] * b[3] + a[15] * b[3]
-  };
+inline r4vector apply_transformation(r4vector a, r4transform b) {
+  r4vector result;
+  _MAT_MULT(b, a, 4, 4, 1, result);
   return normalize_r4vector(result);
 };
 
 inline r4transform multiply_transformations(r4transform a, r4transform b) {
-  r4transform result = {
-    a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12],
-    a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13],
-    a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14],
-    a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15],
-
-    a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12],
-    a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13],
-    a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14],
-    a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15],
-
-    a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12],
-    a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13],
-    a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14],
-    a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15],
-
-    a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12],
-    a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13],
-    a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14],
-    a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15]
-  };
+  r4transform result;
+  _MAT_MULT(a, b, 4, 4, 4, result);
   return result;
 }
 

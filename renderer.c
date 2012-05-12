@@ -47,7 +47,7 @@ static SquarePoints get_origin_square(void) {
   return res;
 }
 
-static void draw_points(cairo_t *cr, gint originx, gint originy, matrix_el_t scale, SquarePoints points) {
+static void draw_points(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, matrix_el_t scale, SquarePoints points) {
   for (size_t i = 0; i < 4; i++) {
     r4vector projected = points.points[i];
     cairo_move_to(cr, originx+(scale*projected[0]), originy-(scale*projected[1]));
@@ -56,24 +56,19 @@ static void draw_points(cairo_t *cr, gint originx, gint originy, matrix_el_t sca
   }
 }
 
-static void render_recursive(cairo_t *cr, gint originx, gint originy, matrix_el_t scale, SquarePoints points, Graph *current) {
+static void render_recursive(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, matrix_el_t scale, SquarePoints points, Graph *current) {
   draw_points(cr, originx, originy, scale, points);
 
   if (current->adjacent) {
-    printf ("DAYUM!\n");
-    r4transform trans = hyperbolic_translation(hyperbolic_midpoint(points.points[1], points.points[2]),
-                                               hyperbolic_midpoint(points.points[0], points.points[3]));
+    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[3]));
     SquarePoints nextPoints = {
       {
-        apply_transformation(points.points[0], trans),
-        apply_transformation(points.points[1], trans),
         apply_transformation(points.points[2], trans),
-        apply_transformation(points.points[3], trans)
+        points.points[0],
+        points.points[3],
+        apply_transformation(points.points[1], trans)
       }
     };
-    for (size_t i = 0; i < 4; i++) {
-      printf("%f, %f\n", nextPoints.points[i][0], nextPoints.points[i][1]);
-    }
     render_recursive(cr, originx, originy, scale, nextPoints, current->adjacent->rotate_r->rotate_r);
   }
 }
@@ -103,7 +98,7 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
   cairo_set_line_width(cr, 5);
 
-  render_recursive(cr, originx, originy, originx/2, get_origin_square(), graph);
+  render_recursive(cr, originx, originy, requisition.width/2, get_origin_square(), graph);
 
   cairo_destroy(cr);
 
