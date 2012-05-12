@@ -24,19 +24,21 @@
 
 Graph *build_initial_node ()
 {
-  Graph (*first)[4] = malloc(4 * sizeof(Graph));
-  for (int i = 0; i < 4; i++)
-    first[i]->rotate_r = first[(i+1) % 4];
   Tile *t = malloc(sizeof(Tile));
 
   /* Set the Tile to the DEFAULT VALUES */
   t->tile_type = TILE_TYPE_DEFAULT;
   t->agent = AGENT_DEFAULT;
   t->dfs_use = 0;
-  
-  for (int i = 0; i < 4; i++)
-    first[i]->tile = t;
-  return first[0];
+
+  Graph *first = malloc(4 * sizeof(Graph));
+  for (size_t i = 0; i < 4; i++)
+    {
+      first[i].tile = t;
+      first[i].rotate_r = first + ((i + 1) % 4);
+      first[i].adjacent = NULL;
+    }
+  return first;
 }
 
 void build_enforce_convexity_left (Graph *g)

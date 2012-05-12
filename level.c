@@ -20,45 +20,39 @@
 
 #include "types.h"
 #include "level.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "level_format.h"
 
 int level_get_line (FILE *f, char **line_ptr, size_t *size)
 {
   int returnee = getline(line_ptr, size, f);
-  while (returnee != -1)
-    {
-      if (**line_ptr == '\n')
-        continue;
-      else if (**line_ptr == LF_COMMENT)
-        continue;
-      else
-        break;
-    }
-  return returnee;
+  if (returnee == -1 || (**line_ptr != '\n' && **line_ptr != LF_COMMENT))
+    return returnee;
+  else
+    return level_get_line(f, line_ptr, size);
 }
 
 
 SavedTile *level_parse_file (FILE *f, int *num_tiles, int *u)
 {
   char *line_ptr = NULL;
+  SavedTile *returnee = NULL;
   size_t size = 0;
+  size_t r_size = 4;
+  size_t r_used = 0;
 
   /* Yes, I used two goto's for the two fail conditions.  Eat it. */
 
-  if (num_tiles == NULL)  goto fail_early;
-  if (u == NULL)  goto fail_early;
+  if (num_tiles == NULL || u == NULL)  goto fail;
 
-  size_t r_size = 4;
-  size_t r_used = 0;
-  SavedTile *returnee = malloc(r_size * sizeof(SavedTile));
+  returnee = malloc(r_size * sizeof(SavedTile));
 
   int unsolved = 0;
   int audit = 0;
 
-  while (level_get_line(f, &line_ptr, &size) == -1)
+  while (level_get_line(f, &line_ptr, &size) != -1)
     {
       if (line_ptr[0] == '\0')
         break; /* EOF: done */
@@ -74,7 +68,7 @@ SavedTile *level_parse_file (FILE *f, int *num_tiles, int *u)
                  "%hhd"LF_DELIM"%hhd"LF_DELIM"%m[a-zA-Z]",
                  &(returnee[r_used].tile_type),
                  &(returnee[r_used].agent),
-                 &(returnee[r_used].path)) != 3)  goto fail;
+                 &(returnee[r_used].path)) < 2)  goto fail;
 
 
       if ((returnee[r_used].tile_type == TILE_TYPE_TARGET) &&
@@ -104,9 +98,10 @@ SavedTile *level_parse_file (FILE *f, int *num_tiles, int *u)
 
 
  fail:
+  for (size_t i = 0; i < r_used; i++) {
+    free(returnee[r_used].path);
+  }
   free(returnee);
- fail_early:
-  /* drop through to... */
   free(line_ptr);
   return NULL;
 }

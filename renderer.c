@@ -18,12 +18,16 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdlib.h>
+#include <math.h>
+#include <getopt.h>
 #include <gtk/gtk.h>
 #include <cairo.h>
-#include <math.h>
 
 #include "graph.h"
 #include "matrix.h"
+#include "level.h"
+#include "build.h"
 
 #define RENDERER_MIN_WIDTH 480
 #define RENDERER_MIN_HEIGHT 480
@@ -78,7 +82,55 @@ int main(int argc, char *argv[]) {
 
   gtk_init(&argc, &argv);
 
-  Graph* graph = NULL;
+  char* level = NULL;
+
+  while (1) {
+    static struct option long_options[] = {
+      {"level", required_argument, 0, 'l'},
+      {0, 0, 0, 0}
+    };
+    int option_index = 0;
+    int c = getopt_long(argc, argv, "l:", long_options, &option_index);
+    if (c == -1) break;
+    switch(c) {
+    case 'l':
+      level = optarg;
+      break;
+    case '?':
+      break;
+    default:
+      abort();
+    }
+  }
+
+  if (level == NULL) {
+    fprintf(stderr, "Required argument level not specified.\n");
+    return 1;
+  }
+
+  FILE* levelfh = fopen(level, "r");
+  if (levelfh == NULL) {
+    perror("Could not open level!\n");
+    return 1;
+  }
+
+  int num_tiles, unsolved;
+
+  SavedTile *map = level_parse_file(levelfh, &num_tiles, &unsolved);
+
+  fclose(levelfh);
+
+  if (map == NULL) {
+    fprintf(stderr, "Could not succesfully parse %s.\n", level);
+    return 1;
+  }
+
+  Graph* graph = build_graph(map, num_tiles);
+
+  if (graph == NULL) {
+    fprintf(stderr, "Could not succesfully create graph from %s.\n", level);
+    return 1;
+  }
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
@@ -86,7 +138,7 @@ int main(int argc, char *argv[]) {
       NULL);
 
   GtkWidget *renderer = get_renderer_widget(&graph);
-  gtk_container_add(GTK_CONTAINER(window), renderer);
+//  gtk_container_add(GTK_CONTAINER(window), renderer);
 
   gtk_widget_show_all(window);
 

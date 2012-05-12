@@ -25,7 +25,7 @@
 
 # I'll describe the location scheme better later.
 
-0|0|  # You can also put a comment here.
+0|0|R  # You can also put a comment here.
 0|1|F
 2|0|FF#or even right here   
 

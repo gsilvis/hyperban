@@ -21,7 +21,7 @@
 #ifndef __HYPERBAN_MATRIX_H
 #define __HYPERBAN_MATRIX_H
 
-#include "math.h"
+#include <math.h>
 
 typedef float matrix_el_t;
 

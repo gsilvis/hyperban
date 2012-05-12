@@ -22,7 +22,7 @@
 #define __HYPERBAN__LEVEL_H
 
 #include "types.h"
-#include "stdio.h"
+#include <stdio.h>
 
 /* Parse a level from the file f.  Stores the number of tiles in num_tiles */
 SavedTile *level_parse_file (FILE *f, int *num_tiles, int *unsolved);
