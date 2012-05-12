@@ -130,8 +130,8 @@ void build_add_node (Graph *graph, SavedTile *tile)
             {
               graph->adjacent = build_initial_node();
               graph->adjacent->adjacent = graph;
-              build_enforce_convexity_left(graph);
-              build_enforce_convexity_right(graph);
+//              build_enforce_convexity_left(graph);
+//              build_enforce_convexity_right(graph);
             }
 
           graph = graph->adjacent->rotate_r->rotate_r;

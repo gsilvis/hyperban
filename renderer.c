@@ -50,8 +50,9 @@ static SquarePoints get_origin_square(void) {
 static void draw_points(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, matrix_el_t scale, SquarePoints points) {
   for (size_t i = 0; i < 4; i++) {
     r4vector projected = points.points[i];
+    r4vector next = points.points[ (i + 1) % 4];
     cairo_move_to(cr, originx+(scale*projected[0]), originy-(scale*projected[1]));
-    cairo_line_to(cr, originx+(scale*projected[0]), originy-(scale*projected[1]));
+    cairo_line_to(cr, originx+(scale*next[0]), originy-(scale*next[1]));
     cairo_stroke(cr);
   }
 }
@@ -124,7 +125,7 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
   cairo_set_source_rgb(cr, 0, 0, 0);
   cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-  cairo_set_line_width(cr, 0.5);
+  cairo_set_line_width(cr, 2);
 
   GtkRequisition requisition;
 
@@ -136,8 +137,6 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
   cairo_arc(cr, originx, originy, requisition.width/2, 0, 2 * M_PI);
 
   cairo_stroke(cr);
-
-  cairo_set_line_width(cr, 5);
 
   clear_dfs(graph);
 
