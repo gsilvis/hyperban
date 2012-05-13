@@ -53,18 +53,26 @@ void build_enforce_convexity_left (Graph *g)
   if (!clockwise || !ccwise)
     return; /* No need to change anything */
 
+  Graph *newclock = clockwise->rotate_r->adjacent;
+  Graph *newcc = ROTATE_L(ccwise)->adjacent;
+
+  if (!newclock)
+    {
+      newclock = build_initial_node();
+      /* Link clockwise to newclock */
+      clockwise->rotate_r->adjacent = newclock;
+      newclock->adjacent = clockwise->rotate_r;
+    }
 
 
-  /* There are THREE present nodes around this vertex, so we want to fill in
-     the other two. */
-  Graph *newclock = build_initial_node();
-  Graph *newcc = build_initial_node();
-  /* Link clockwise to newclock */
-  clockwise->rotate_r->adjacent = newclock;
-  newclock->adjacent = clockwise->rotate_r;
-  /* Lock ccwise to newcc */
-  ROTATE_L(ccwise)->adjacent = newcc;
-  newcc->adjacent = ROTATE_L(ccwise);
+  if (!newcc)
+    {
+      newcc = build_initial_node();
+      /* Lock ccwise to newcc */
+      ROTATE_L(ccwise)->adjacent = newcc;
+      newcc->adjacent = ROTATE_L(ccwise);
+    }
+
   /* Link newclock to newcc */
   newclock->rotate_r->adjacent = ROTATE_L(newcc);
   ROTATE_L(newcc)->adjacent = newclock->rotate_r;
@@ -86,16 +94,28 @@ void build_enforce_convexity_right (Graph *g)
     return; /* No need to change anything */
 
 
+
   /* There are THREE present nodes around this vertex, so we want to fill in
      the other two. */
-  Graph *newclock = build_initial_node();
-  Graph *newcc = build_initial_node();
-  /* Link clockwise to newclock */
-  clockwise->rotate_r->adjacent = newclock;
-  newclock->adjacent = clockwise->rotate_r;
-  /* Lock ccwise to newcc */
-  ROTATE_L(ccwise)->adjacent = newcc;
-  newcc->adjacent = ROTATE_L(ccwise);
+  Graph *newclock = clockwise->rotate_r->adjacent;
+  Graph *newcc = ROTATE_L(ccwise)->adjacent;
+
+  if (!newclock)
+    {
+      newclock = build_initial_node();
+      /* Link clockwise to newclock */
+      clockwise->rotate_r->adjacent = newclock;
+      newclock->adjacent = clockwise->rotate_r;
+    }
+
+  if (!newcc)
+    {
+      newcc = build_initial_node();
+      /* Lock ccwise to newcc */
+      ROTATE_L(ccwise)->adjacent = newcc;
+      newcc->adjacent = ROTATE_L(ccwise);
+    }
+
   /* Link newclock to newcc */
   newclock->rotate_r->adjacent = ROTATE_L(newcc);
   ROTATE_L(newcc)->adjacent = newclock->rotate_r;
@@ -107,15 +127,15 @@ void build_enforce_convexity_right (Graph *g)
 
 void build_wall_in (Graph *graph)
 {
-  for (size_t i = 0; i < 4; i++)
+  for (size_t i = 0; i < 8; i++)
     {
       if (!graph->adjacent)
         {
           graph->adjacent = build_initial_node();
           graph->adjacent->adjacent = graph;
-          build_enforce_convexity_left(graph->adjacent);
-          build_enforce_convexity_right(graph->adjacent);
         }
+      build_enforce_convexity_left(graph);
+      build_enforce_convexity_right(graph);
       graph = graph->rotate_r;
     }
 }
@@ -165,6 +185,7 @@ void build_add_node (Graph *graph, SavedTile *tile)
 Graph *build_graph (SavedTile *tiles, size_t num_tiles)
 {
   Graph *g = build_initial_node();
+  build_wall_in(g);
   g->tile->tile_type = TILE_TYPE_SPACE;
   for (size_t i = 0; i < num_tiles; i++)
     build_add_node(g, &tiles[i]);
