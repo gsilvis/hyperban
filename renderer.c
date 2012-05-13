@@ -148,11 +148,12 @@ static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) 
 }
 
 static void add_queue(GraphQueue **queue, GraphQueue **queue_end,
-    Graph *graph, SquarePoints* points) {
+    Graph *graph, SquarePoints* points, size_t dist) {
   GraphQueue *n = malloc(sizeof(GraphQueue));
   n->next = NULL;
   n->val = graph;
   n->points = points;
+  n->dist = dist;
   if (*queue == NULL) {
     *queue = *queue_end = n;
   } else {
@@ -165,18 +166,25 @@ static void render_graph(RendererParams *params, Graph *graph) {
   GraphQueue *queue_end = queue;
   queue->val = graph;
   queue->next = NULL;
+  queue->dist = 1;
   queue->points = get_origin_square();
 
   while (queue != NULL) {
     Graph *current = queue->val;
     SquarePoints *points = queue->points;
     GraphQueue *n = queue->next;
+    size_t d = queue->dist;
     free(queue);
     queue = n;
 
     current->tile->dfs_use = 1;
 
     draw_tile(params, points, current->tile);
+
+    if (d >= RENDERER_MAX_DIST) {
+      free(points);
+      continue;
+    }
 
     if (current->adjacent && !current->adjacent->tile->dfs_use) {
       r4transform trans =
@@ -187,7 +195,8 @@ static void render_graph(RendererParams *params, Graph *graph) {
       next_points->points[1] = points->points[0];
       next_points->points[2] = points->points[3];
       next_points->points[3] = apply_transformation(points->points[1], trans);
-      add_queue(&queue, &queue_end, ROTATE_B(current->adjacent), next_points);
+      add_queue(&queue, &queue_end, ROTATE_B(current->adjacent), next_points,
+          d+1);
     }
 
     if (current->rotate_r->adjacent &&
@@ -201,7 +210,7 @@ static void render_graph(RendererParams *params, Graph *graph) {
       next_points->points[2] = points->points[1];
       next_points->points[3] = points->points[0];
       add_queue(&queue, &queue_end, current->rotate_r->adjacent->rotate_r,
-        next_points);
+        next_points, d+1);
     }
 
     if (ROTATE_B(current)->adjacent &&
@@ -215,7 +224,7 @@ static void render_graph(RendererParams *params, Graph *graph) {
       next_points->points[2] = apply_transformation(points->points[0], trans);
       next_points->points[3] = points->points[2];
       add_queue(&queue, &queue_end, ROTATE_B(current)->adjacent,
-        next_points);
+        next_points, d+1);
     }
 
     if (ROTATE_L(current)->adjacent &&
@@ -229,7 +238,7 @@ static void render_graph(RendererParams *params, Graph *graph) {
       next_points->points[2] = apply_transformation(points->points[0], trans);
       next_points->points[3] = apply_transformation(points->points[1], trans);
       add_queue(&queue, &queue_end, ROTATE_L(ROTATE_L(current)->adjacent),
-          next_points);
+          next_points, d+1);
     }
     free(points);
   }
@@ -250,7 +259,8 @@ static void renderer_draw(GtkWidget *widget, Graph* graph) {
   gint originx = requisition.width / 2;
   gint originy = requisition.height / 2;
 
-  cairo_arc(cr, originx, originy, requisition.width/2, 0, 2 * M_PI);
+  cairo_arc(cr, originx, originy, requisition.width/2 - RENDERER_BORDER,
+      0, 2 * M_PI);
 
   cairo_set_source_rgb(cr, .5, .5, .5);
   cairo_fill_preserve(cr);
@@ -263,7 +273,7 @@ static void renderer_draw(GtkWidget *widget, Graph* graph) {
   RendererParams params = {
     cr,
     {originx, originy},
-    requisition.width/2,
+    requisition.width/2 - RENDERER_BORDER,
     projection
   };
 

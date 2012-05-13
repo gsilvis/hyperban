@@ -31,8 +31,7 @@ struct square_points_t {
 typedef struct square_points_t SquarePoints;
 
 enum hyperbolic_projection_t {
-  PROJECTION_KLEIN,
-  PROJECTION_POINCARE
+  PROJECTION_KLEIN,  PROJECTION_POINCARE
 };
 
 #define DEFAULT_PROJECTION PROJECTION_KLEIN
@@ -51,6 +50,7 @@ typedef struct renderer_params_t RendererParams;
 struct graph_queue_t {
   Graph* val;
   SquarePoints *points;
+  size_t dist;
   struct graph_queue_t *next;
 };
 
@@ -60,5 +60,9 @@ typedef struct graph_queue_t GraphQueue;
 #define KEY_RIGHT GDK_KEY_Right
 #define KEY_LEFT GDK_KEY_Left
 #define KEY_DOWN GDK_KEY_Down
+
+#define RENDERER_BORDER 10
+
+#define RENDERER_MAX_DIST 7
 
 #endif /* __HYPERBAN_RENDERER_H */
