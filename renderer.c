@@ -34,6 +34,10 @@
 #define RENDERER_MIN_WIDTH 480
 #define RENDERER_MIN_HEIGHT 480
 
+#define MAX_ARC_RADIUS 10E3
+
+static HyperbolicProjection projection = DEFAULT_PROJECTION;
+
 /* returns points in clockwise order */
 static SquarePoints get_origin_square(void) {
   SquarePoints res = {
@@ -47,71 +51,183 @@ static SquarePoints get_origin_square(void) {
   return res;
 }
 
-static void draw_points(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, matrix_el_t scale, SquarePoints points) {
-  for (size_t i = 0; i < 4; i++) {
-    r4vector projected = points.points[i];
-    r4vector next = points.points[ (i + 1) % 4];
-    cairo_move_to(cr, originx+(scale*projected[0]), originy-(scale*projected[1]));
-    cairo_line_to(cr, originx+(scale*next[0]), originy-(scale*next[1]));
-    cairo_stroke(cr);
+/* I just took this from wikipedia:Circumscribed_circle */
+static void arc_to(cairo_t *cr, double x1, double y1, double x2,
+    double y2, double x3, double y3) {
+  // Calculate the circumcenter of the triangle
+  double _x2p = x2-x1;
+  double _x3p = x3-x1;
+  double _y2p = y2-y1;
+  double _y3p = y3-y1;
+
+  double d = 2 * (_x2p*_y3p - _y2p*_x3p);
+
+  double _2s = (_x2p*_x2p + _y2p*_y2p);
+  double _3s = (_x3p*_x3p + _y3p*_y3p);
+
+  double cx = (_y3p*_2s - _y2p*_3s) / d + x1;
+  double cy = (_x2p*_3s - _x3p*_2s) / d + y1;
+
+  // Calculate the distance of the points from the circumcenter (i.e. radius)
+  double t1 = x1 - cx;
+  double t2 = y1 - cy;
+
+  double r = sqrt(t1 * t1 + t2 * t2);
+
+  if (r > MAX_ARC_RADIUS) {
+    cairo_line_to(cr, x3, y3);
+    return;
+  }
+
+  // Calculate the angles required for the arc
+  double a1 = atan2((y1 - cy), (x1 - cx));
+  double a2 = atan2((y3 - cy), (x3 - cx));
+
+  if (a1 < 0) a1 += 2*M_PI;
+  if (a2 < 0) a2 += 2*M_PI;
+
+  double diff = a2 - a1;
+
+  if (diff > 0 && diff < M_PI)
+    cairo_arc(cr, cx, cy, r, a1, a2);
+  else
+    cairo_arc_negative(cr, cx, cy, r, a1, a2);
+}
+
+static void draw_tile(RendererParams *params, SquarePoints points, Tile *tile) {
+  if (tile->tile_type == TILE_TYPE_WALL) {
+    return;
+  }
+  cairo_save(params->cr);
+  cairo_translate(params->cr, params->origin[0], params->origin[1]);
+  cairo_scale(params->cr, params->scale, params->scale);
+  if (params->projection == PROJECTION_KLEIN) {
+    for (size_t i = 0; i < 4; i++) {
+      r4vector projected = points.points[i];
+      cairo_line_to(params->cr, projected[0], projected[1]);
+    }
+    cairo_close_path(params->cr);
+  } else if (params->projection == PROJECTION_POINCARE) {
+    r4vector projected[4] = {
+      klein2poincare(points.points[0]),
+      klein2poincare(points.points[1]),
+      klein2poincare(points.points[2]),
+      klein2poincare(points.points[3])
+    };
+    r4vector midpoints[4] = {
+      klein2poincare(hyperbolic_midpoint(points.points[0], points.points[1])),
+      klein2poincare(hyperbolic_midpoint(points.points[1], points.points[2])),
+      klein2poincare(hyperbolic_midpoint(points.points[2], points.points[3])),
+      klein2poincare(hyperbolic_midpoint(points.points[3], points.points[0]))
+    };
+    cairo_move_to(params->cr,
+        projected[0][0],
+        projected[0][1]);
+    for (size_t i = 0; i < 4; i++) {
+      arc_to(params->cr,
+          projected[i][0],
+          projected[i][1],
+          midpoints[i][0],
+          midpoints[i][1],
+          projected[(i+1)%4][0],
+          projected[(i+1)%4][1]);
+    }
+    cairo_close_path(params->cr);
+  }
+  if (tile->tile_type == TILE_TYPE_SPACE) {
+    cairo_set_source_rgb(params->cr, 1, 1, 1);
+  } else if (tile->tile_type == TILE_TYPE_TARGET) {
+    cairo_set_source_rgb(params->cr, 1, 1, 0);
+  }
+
+  cairo_fill_preserve(params->cr);
+  cairo_set_source_rgb(params->cr, 0, 0, 0);
+  cairo_stroke(params->cr);
+  cairo_restore(params->cr);
+}
+
+inline static void add_queue(GraphQueue **queue, GraphQueue **queue_end,
+    Graph *graph, SquarePoints points) {
+  GraphQueue *n = malloc(sizeof(GraphQueue));
+  n->next = NULL;
+  n->val = graph;
+  n->points = points;
+  if (*queue == NULL) {
+    *queue = *queue_end = n;
+  } else {
+    *queue_end = ((*queue_end)->next = n);
   }
 }
 
-static void render_recursive(cairo_t *cr, matrix_el_t originx, matrix_el_t originy, matrix_el_t scale, SquarePoints points, Graph *current) {
-  current->tile->dfs_use = 1;
+static void render_graph(RendererParams *params, SquarePoints start, Graph *graph) {
+  GraphQueue *queue = malloc(sizeof(GraphQueue));
+  GraphQueue *queue_end = queue;
+  queue->val = graph;
+  queue->next = NULL;
+  queue->points = start;
 
-  draw_points(cr, originx, originy, scale, points);
+  while (queue != NULL) {
+    Graph *current = queue->val;
+    SquarePoints points = queue->points;
+    GraphQueue *n = queue->next;
+    free(queue);
+    queue = n;
 
-  if (current->adjacent && !current->adjacent->tile->dfs_use) {
-    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[3]));
-    SquarePoints nextPoints = {
-      {
-        apply_transformation(points.points[2], trans),
-        points.points[0],
-        points.points[3],
-        apply_transformation(points.points[1], trans)
-      }
-    };
-    render_recursive(cr, originx, originy, scale, nextPoints, current->adjacent->rotate_r->rotate_r);
-  }
+    current->tile->dfs_use = 1;
 
-  if (current->rotate_r->adjacent && !current->rotate_r->adjacent->tile->dfs_use) {
-    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[1]));
-    SquarePoints nextPoints = {
-      {
-        apply_transformation(points.points[2], trans),
-        apply_transformation(points.points[3], trans),
-        points.points[1],
-        points.points[0]
-      }
-    };
-    render_recursive(cr, originx, originy, scale, nextPoints, current->rotate_r->adjacent->rotate_r);
-  }
+    draw_tile(params, points, current->tile);
 
-  if (current->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[1], points.points[2]));
-    SquarePoints nextPoints = {
-      {
-        points.points[1],
-        apply_transformation(points.points[3], trans),
-        apply_transformation(points.points[0], trans),
-        points.points[2]
-      }
-    };
-    render_recursive(cr, originx, originy, scale, nextPoints, current->rotate_r->rotate_r->adjacent);
-  }
+    if (current->adjacent && !current->adjacent->tile->dfs_use) {
+      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[3]));
+      SquarePoints next_points = {
+        {
+          apply_transformation(points.points[2], trans),
+          points.points[0],
+          points.points[3],
+          apply_transformation(points.points[1], trans)
+        }
+      };
+      add_queue(&queue, &queue_end, current->adjacent->rotate_r->rotate_r, next_points);
+    }
 
-  if (current->rotate_r->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-    r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[2], points.points[3]));
-    SquarePoints nextPoints = {
-      {
-        points.points[3],
-        points.points[2],
-        apply_transformation(points.points[0], trans),
-        apply_transformation(points.points[1], trans)
-      }
-    };
-    render_recursive(cr, originx, originy, scale, nextPoints, current->rotate_r->rotate_r->rotate_r->adjacent->rotate_r->rotate_r->rotate_r);
+    if (current->rotate_r->adjacent && !current->rotate_r->adjacent->tile->dfs_use) {
+      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[1]));
+      SquarePoints next_points = {
+        {
+          apply_transformation(points.points[2], trans),
+          apply_transformation(points.points[3], trans),
+          points.points[1],
+          points.points[0]
+        }
+      };
+      add_queue(&queue, &queue_end, current->rotate_r->adjacent->rotate_r, next_points);
+    }
+
+    if (current->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[1], points.points[2]));
+      SquarePoints next_points = {
+        {
+          points.points[1],
+          apply_transformation(points.points[3], trans),
+          apply_transformation(points.points[0], trans),
+          points.points[2]
+        }
+      };
+      add_queue(&queue, &queue_end, current->rotate_r->rotate_r->adjacent, next_points);
+    }
+
+    if (current->rotate_r->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
+      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[2], points.points[3]));
+      SquarePoints next_points = {
+        {
+          points.points[3],
+          points.points[2],
+          apply_transformation(points.points[0], trans),
+          apply_transformation(points.points[1], trans)
+        }
+      };
+      add_queue(&queue, &queue_end, current->rotate_r->rotate_r->rotate_r->adjacent->rotate_r->rotate_r->rotate_r, next_points);
+    }
   }
 }
 
@@ -123,7 +239,6 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
   cr = gdk_cairo_create(widget->window);
 
-  cairo_set_source_rgb(cr, 0, 0, 0);
   cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
   cairo_set_line_width(cr, 2);
 
@@ -136,11 +251,24 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
   cairo_arc(cr, originx, originy, requisition.width/2, 0, 2 * M_PI);
 
+  cairo_set_source_rgb(cr, .5, .5, .5);
+  cairo_fill_preserve(cr);
+
+  cairo_set_source_rgb(cr, 0, 0, 0);
   cairo_stroke(cr);
 
   clear_dfs(graph);
 
-  render_recursive(cr, originx, originy, requisition.width/2, get_origin_square(), graph);
+  RendererParams params = {
+    cr,
+    {originx, originy},
+    requisition.width/2,
+    projection
+  };
+
+  cairo_set_line_width(cr, 1/params.scale);
+
+  render_graph(&params, get_origin_square(), graph);
 
   cairo_destroy(cr);
 
@@ -176,14 +304,22 @@ int main(int argc, char *argv[]) {
   while (1) {
     static struct option long_options[] = {
       {"level", required_argument, 0, 'l'},
+      {"poincare", no_argument, 0, 'P'},
+      {"klein", no_argument, 0, 'K'},
       {0, 0, 0, 0}
     };
     int option_index = 0;
-    int c = getopt_long(argc, argv, "l:", long_options, &option_index);
+    int c = getopt_long(argc, argv, "l:PK", long_options, &option_index);
     if (c == -1) break;
     switch(c) {
     case 'l':
       level = optarg;
+      break;
+    case 'P':
+      projection = PROJECTION_POINCARE;
+      break;
+    case 'K':
+      projection = PROJECTION_KLEIN;
       break;
     case '?':
       break;

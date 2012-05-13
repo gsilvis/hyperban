@@ -148,9 +148,9 @@ extern inline r4vector weierstrass2poincare(r4vector a) {
 }
 
 extern inline r4vector poincare2weierstrass(r4vector a) {
-  r4vector co = const_r4vector(1.0 / (1 - a[0]*a[0] - a[1]*a[1]));
-  r4vector result = {2 * a[0], 2 * a[1], 1 + a[0] * a[0] + a[1] * a[1], 0 };
-  return co * result;
+  matrix_el_t d = 1.0 / (1 - a[0]*a[0] - a[1]*a[1]);
+  r4vector result = {d*2*a[0], d*2*a[1], d*(1 + a[0] * a[0] + a[1] * a[1]), 0 };
+  return result;
 }
 
 extern inline r4vector weierstrass2klein(r4vector a) {
@@ -159,9 +159,17 @@ extern inline r4vector weierstrass2klein(r4vector a) {
 }
 
 extern inline r4vector klein2weierstrass(r4vector a) {
-  r4vector co = const_r4vector(1.0 / sqrt(1 - a[0]*a[0] - a[1]*a[1]));
-  r4vector result = {a[0], a[1], 1, 0};
-  return co * result;
+  matrix_el_t d = (1.0 / sqrt(1 - a[0]*a[0] - a[1]*a[1]));
+  r4vector result = {a[0] * d, a[1] * d, d, 0};
+  return result;
+}
+
+extern inline r4vector klein2poincare(r4vector a) {
+  return weierstrass2poincare(klein2weierstrass(a));
+}
+
+extern inline r4vector poincare2klein(r4vector a) {
+  return weierstrass2klein(poincare2weierstrass(a));
 }
 
 #endif /* __HYPERBAN_MATRIX_H */

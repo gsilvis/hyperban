@@ -22,11 +22,38 @@
 #define __HYPERBAN_RENDERER_H
 
 #include "matrix.h"
+#include "graph.h"
 
 struct square_points_t {
   r4vector points[4];
 };
 
 typedef struct square_points_t SquarePoints;
+
+enum hyperbolic_projection_t {
+  PROJECTION_KLEIN,
+  PROJECTION_POINCARE
+};
+
+#define DEFAULT_PROJECTION PROJECTION_KLEIN
+
+typedef enum hyperbolic_projection_t HyperbolicProjection;
+
+struct renderer_params_t {
+  cairo_t *cr;
+  double origin[2];
+  double scale;
+  HyperbolicProjection projection;
+};
+
+typedef struct renderer_params_t RendererParams;
+
+struct graph_queue_t {
+  Graph* val;
+  SquarePoints points;
+  struct graph_queue_t *next;
+};
+
+typedef struct graph_queue_t GraphQueue;
 
 #endif /* __HYPERBAN_RENDERER_H */
