@@ -100,9 +100,6 @@ static void arc_to(cairo_t *cr, double x1, double y1, double x2,
 }
 
 static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) {
-  if (tile->tile_type == TILE_TYPE_WALL) {
-    return;
-  }
   cairo_save(params->cr);
   cairo_translate(params->cr, params->origin[0], params->origin[1]);
   cairo_scale(params->cr, params->scale, params->scale);
@@ -140,6 +137,8 @@ static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) 
       cairo_set_source_rgb(params->cr, 0, 1, 0);
     else
       cairo_set_source_rgb(params->cr, 1, 1, 0);
+  } else if (tile->tile_type == TILE_TYPE_WALL) {
+    cairo_set_source_rgb(params->cr, .25, .25, .25);
   }
 
   cairo_fill_preserve(params->cr);
