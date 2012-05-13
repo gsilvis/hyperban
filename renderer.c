@@ -46,10 +46,10 @@ static SquarePoints *get_origin_square(void) {
   SquarePoints *res = malloc(sizeof(SquarePoints));
   *res = (SquarePoints) {
     {
-      { MORE_MAGIC,  MORE_MAGIC, 0, 1},
       { MORE_MAGIC, -MORE_MAGIC, 0, 1},
-      {-MORE_MAGIC, -MORE_MAGIC, 0, 1},
-      {-MORE_MAGIC,  MORE_MAGIC, 0, 1}
+      { MORE_MAGIC,  MORE_MAGIC, 0, 1},
+      {-MORE_MAGIC,  MORE_MAGIC, 0, 1},
+      {-MORE_MAGIC, -MORE_MAGIC, 0, 1}
     }
   };
   return res;
@@ -131,9 +131,15 @@ static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) 
     cairo_close_path(params->cr);
   }
   if (tile->tile_type == TILE_TYPE_SPACE) {
-    cairo_set_source_rgb(params->cr, 1, 1, 1);
+    if (tile->agent == AGENT_BOX)
+      cairo_set_source_rgb(params->cr, 0, 0, 1);
+    else
+      cairo_set_source_rgb(params->cr, 1, 1, 1);
   } else if (tile->tile_type == TILE_TYPE_TARGET) {
-    cairo_set_source_rgb(params->cr, 1, 1, 0);
+    if (tile->agent == AGENT_BOX)
+      cairo_set_source_rgb(params->cr, 0, 1, 0);
+    else
+      cairo_set_source_rgb(params->cr, 1, 1, 0);
   }
 
   cairo_fill_preserve(params->cr);
@@ -280,8 +286,6 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
 static gboolean on_renderer_key_press_event(GtkWidget *widget,
     GdkEventKey *event, gpointer data) {
-
-  printf("Key press!\n");
   Board* board = data;
 
   Move m;
@@ -307,8 +311,6 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
   if (m != -1) {
     perform_move(board, m);
     gdk_window_invalidate_rect(widget->window, NULL, FALSE);
-  } else {
-   printf("Invalid key!!\n");
   }
   return FALSE;
 }
