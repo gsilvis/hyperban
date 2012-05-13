@@ -26,13 +26,12 @@ int perform_move (Board *b, Move move)
 {
   Graph *old = b->graph;
   Graph *new = old;
-  int i;
-  for (i = 0; i < move; i++)
+  for (char i = 0; i < move; i++)
     new = new->rotate_r;
   new = new->adjacent;
-  for (; i < 4; i++)
+  // Re-align orientation
+  for (char i = 0; i < (2 - move + 4) % 4; i++)
     new = new->rotate_r;
-
 
   if (new->tile->tile_type == TILE_TYPE_WALL)
     return RESULT_NO_MOVE_POSSIBLE; /* No move allowed */
@@ -47,7 +46,7 @@ int perform_move (Board *b, Move move)
   /* There's a box, so we need to figure out what's behind it */
 
   Graph *behind = new;
-  for (i = 0; i < move; i++)
+  for (char i = 0; i < move; i++)
     behind = behind->rotate_r;
   behind = behind->adjacent;
 

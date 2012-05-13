@@ -39,6 +39,4 @@ typedef enum {
 
 move_result_t perform_move (Board *g, Move move);
 
-
-
 #endif /* __HYPERBAN__SOKOBAN_H */

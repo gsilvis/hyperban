@@ -22,6 +22,8 @@
 #include <math.h>
 #include <getopt.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkkeysyms.h>
 #include <cairo.h>
 
 #include "renderer.h"
@@ -30,6 +32,7 @@
 #include "level.h"
 #include "build.h"
 #include "consts.h"
+#include "sokoban.h"
 
 #define RENDERER_MIN_WIDTH 480
 #define RENDERER_MIN_HEIGHT 480
@@ -111,10 +114,8 @@ static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) 
     cairo_close_path(params->cr);
   } else if (params->projection == PROJECTION_POINCARE) {
     r4vector projected[4] = {
-      klein2poincare(points->points[0]),
-      klein2poincare(points->points[1]),
-      klein2poincare(points->points[2]),
-      klein2poincare(points->points[3])
+      klein2poincare(points->points[0]), klein2poincare(points->points[1]),
+      klein2poincare(points->points[2]), klein2poincare(points->points[3])
     };
     r4vector midpoints[4] = {
       klein2poincare(hyperbolic_midpoint(points->points[0], points->points[1])),
@@ -122,17 +123,10 @@ static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) 
       klein2poincare(hyperbolic_midpoint(points->points[2], points->points[3])),
       klein2poincare(hyperbolic_midpoint(points->points[3], points->points[0]))
     };
-    cairo_move_to(params->cr,
-        projected[0][0],
-        projected[0][1]);
+    cairo_move_to(params->cr, projected[0][0], projected[0][1]);
     for (size_t i = 0; i < 4; i++) {
-      arc_to(params->cr,
-          projected[i][0],
-          projected[i][1],
-          midpoints[i][0],
-          midpoints[i][1],
-          projected[(i+1)%4][0],
-          projected[(i+1)%4][1]);
+      arc_to(params->cr, projected[i][0], projected[i][1], midpoints[i][0],
+          midpoints[i][1], projected[(i+1)%4][0], projected[(i+1)%4][1]);
     }
     cairo_close_path(params->cr);
   }
@@ -236,10 +230,7 @@ static void render_graph(RendererParams *params, Graph *graph) {
   }
 }
 
-static gboolean on_renderer_expose_event(GtkWidget *widget,
-    GdkEventExpose *event, gpointer data) {
-  Graph* graph = *(Graph**)data;
-
+static void renderer_draw(GtkWidget *widget, Graph* graph) {
   cairo_t *cr;
 
   cr = gdk_cairo_create(widget->window);
@@ -277,20 +268,66 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
   cairo_destroy(cr);
 
+  return;
+}
+
+static gboolean on_renderer_expose_event(GtkWidget *widget,
+    GdkEventExpose *event, gpointer data) {
+  Board* board = data;
+  renderer_draw(widget, board->graph);
   return FALSE; // do not propogate event
 }
 
-static GtkWidget *get_renderer_widget(Graph** graph) {
+static gboolean on_renderer_key_press_event(GtkWidget *widget,
+    GdkEventKey *event, gpointer data) {
+
+  printf("Key press!\n");
+  Board* board = data;
+
+  Move m;
+
+  switch(event->keyval) {
+  case KEY_UP:
+    m = MOVE_UP;
+    break;
+  case KEY_DOWN:
+    m = MOVE_DOWN;
+    break;
+  case KEY_LEFT:
+    m = MOVE_LEFT;
+    break;
+  case KEY_RIGHT:
+    m = MOVE_RIGHT;
+    break;
+  default:
+    m = -1;
+    break;
+  }
+
+  if (m != -1) {
+    perform_move(board, m);
+    gdk_window_invalidate_rect(widget->window, NULL, FALSE);
+  } else {
+   printf("Invalid key!!\n");
+  }
+  return FALSE;
+}
+
+static GtkWidget *get_renderer_widget(Board* board) {
   GtkWidget *result = gtk_event_box_new();
 
   gtk_widget_add_events(result, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
 
   g_signal_connect(result, "expose-event",
-      G_CALLBACK(on_renderer_expose_event), graph);
+      G_CALLBACK(on_renderer_expose_event), board);
+  g_signal_connect(result, "key-press-event",
+      G_CALLBACK(on_renderer_key_press_event), board);
 
   gtk_widget_set_size_request(result, RENDERER_MIN_WIDTH, RENDERER_MIN_HEIGHT);
 
   gtk_widget_set_app_paintable(result, TRUE);
+
+  gtk_widget_set_can_focus(result, TRUE);
 
   return result;
 }
@@ -362,15 +399,19 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
+  Board board = {graph, unsolved};
+
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit),
       NULL);
 
-  GtkWidget *renderer = get_renderer_widget(&graph);
+  GtkWidget *renderer = get_renderer_widget(&board);
   gtk_container_add(GTK_CONTAINER(window), renderer);
 
   gtk_widget_show_all(window);
+
+  gtk_widget_grab_focus(renderer);
 
   gtk_main();
   gdk_threads_leave();

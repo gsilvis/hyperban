@@ -147,6 +147,7 @@ void build_add_node (Graph *graph, SavedTile *tile)
 Graph *build_graph (SavedTile *tiles, size_t num_tiles)
 {
   Graph *g = build_initial_node();
+  g->tile->tile_type = TILE_TYPE_SPACE;
   for (size_t i = 0; i < num_tiles; i++)
     build_add_node(g, &tiles[i]);
   return g;

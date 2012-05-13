@@ -56,4 +56,9 @@ struct graph_queue_t {
 
 typedef struct graph_queue_t GraphQueue;
 
+#define KEY_UP GDK_KEY_Up
+#define KEY_RIGHT GDK_KEY_Right
+#define KEY_LEFT GDK_KEY_Left
+#define KEY_DOWN GDK_KEY_Down
+
 #endif /* __HYPERBAN_RENDERER_H */
