@@ -34,13 +34,14 @@
 #define RENDERER_MIN_WIDTH 480
 #define RENDERER_MIN_HEIGHT 480
 
-#define MAX_ARC_RADIUS 10E3
+#define MAX_ARC_RADIUS 10E4
 
 static HyperbolicProjection projection = DEFAULT_PROJECTION;
 
 /* returns points in clockwise order */
-static SquarePoints get_origin_square(void) {
-  SquarePoints res = {
+static SquarePoints *get_origin_square(void) {
+  SquarePoints *res = malloc(sizeof(SquarePoints));
+  *res = (SquarePoints) {
     {
       { MORE_MAGIC,  MORE_MAGIC, 0, 1},
       { MORE_MAGIC, -MORE_MAGIC, 0, 1},
@@ -75,6 +76,7 @@ static void arc_to(cairo_t *cr, double x1, double y1, double x2,
   double r = sqrt(t1 * t1 + t2 * t2);
 
   if (r > MAX_ARC_RADIUS) {
+    cairo_line_to(cr, x2, y2);
     cairo_line_to(cr, x3, y3);
     return;
   }
@@ -88,13 +90,13 @@ static void arc_to(cairo_t *cr, double x1, double y1, double x2,
 
   double diff = a2 - a1;
 
-  if (diff > 0 && diff < M_PI)
+  if ((diff > 0 && diff < M_PI) || diff < -M_PI)
     cairo_arc(cr, cx, cy, r, a1, a2);
   else
     cairo_arc_negative(cr, cx, cy, r, a1, a2);
 }
 
-static void draw_tile(RendererParams *params, SquarePoints points, Tile *tile) {
+static void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile) {
   if (tile->tile_type == TILE_TYPE_WALL) {
     return;
   }
@@ -103,22 +105,22 @@ static void draw_tile(RendererParams *params, SquarePoints points, Tile *tile) {
   cairo_scale(params->cr, params->scale, params->scale);
   if (params->projection == PROJECTION_KLEIN) {
     for (size_t i = 0; i < 4; i++) {
-      r4vector projected = points.points[i];
+      r4vector projected = points->points[i];
       cairo_line_to(params->cr, projected[0], projected[1]);
     }
     cairo_close_path(params->cr);
   } else if (params->projection == PROJECTION_POINCARE) {
     r4vector projected[4] = {
-      klein2poincare(points.points[0]),
-      klein2poincare(points.points[1]),
-      klein2poincare(points.points[2]),
-      klein2poincare(points.points[3])
+      klein2poincare(points->points[0]),
+      klein2poincare(points->points[1]),
+      klein2poincare(points->points[2]),
+      klein2poincare(points->points[3])
     };
     r4vector midpoints[4] = {
-      klein2poincare(hyperbolic_midpoint(points.points[0], points.points[1])),
-      klein2poincare(hyperbolic_midpoint(points.points[1], points.points[2])),
-      klein2poincare(hyperbolic_midpoint(points.points[2], points.points[3])),
-      klein2poincare(hyperbolic_midpoint(points.points[3], points.points[0]))
+      klein2poincare(hyperbolic_midpoint(points->points[0], points->points[1])),
+      klein2poincare(hyperbolic_midpoint(points->points[1], points->points[2])),
+      klein2poincare(hyperbolic_midpoint(points->points[2], points->points[3])),
+      klein2poincare(hyperbolic_midpoint(points->points[3], points->points[0]))
     };
     cairo_move_to(params->cr,
         projected[0][0],
@@ -146,8 +148,8 @@ static void draw_tile(RendererParams *params, SquarePoints points, Tile *tile) {
   cairo_restore(params->cr);
 }
 
-inline static void add_queue(GraphQueue **queue, GraphQueue **queue_end,
-    Graph *graph, SquarePoints points) {
+static void add_queue(GraphQueue **queue, GraphQueue **queue_end,
+    Graph *graph, SquarePoints* points) {
   GraphQueue *n = malloc(sizeof(GraphQueue));
   n->next = NULL;
   n->val = graph;
@@ -159,16 +161,16 @@ inline static void add_queue(GraphQueue **queue, GraphQueue **queue_end,
   }
 }
 
-static void render_graph(RendererParams *params, SquarePoints start, Graph *graph) {
+static void render_graph(RendererParams *params, Graph *graph) {
   GraphQueue *queue = malloc(sizeof(GraphQueue));
   GraphQueue *queue_end = queue;
   queue->val = graph;
   queue->next = NULL;
-  queue->points = start;
+  queue->points = get_origin_square();
 
   while (queue != NULL) {
     Graph *current = queue->val;
-    SquarePoints points = queue->points;
+    SquarePoints *points = queue->points;
     GraphQueue *n = queue->next;
     free(queue);
     queue = n;
@@ -178,56 +180,59 @@ static void render_graph(RendererParams *params, SquarePoints start, Graph *grap
     draw_tile(params, points, current->tile);
 
     if (current->adjacent && !current->adjacent->tile->dfs_use) {
-      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[3]));
-      SquarePoints next_points = {
-        {
-          apply_transformation(points.points[2], trans),
-          points.points[0],
-          points.points[3],
-          apply_transformation(points.points[1], trans)
-        }
-      };
-      add_queue(&queue, &queue_end, current->adjacent->rotate_r->rotate_r, next_points);
+      r4transform trans =
+          hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
+              points->points[3]));
+      SquarePoints *next_points = malloc(sizeof(SquarePoints));
+      next_points->points[0] = apply_transformation(points->points[2], trans);
+      next_points->points[1] = points->points[0];
+      next_points->points[2] = points->points[3];
+      next_points->points[3] = apply_transformation(points->points[1], trans);
+      add_queue(&queue, &queue_end, ROTATE_B(current->adjacent), next_points);
     }
 
-    if (current->rotate_r->adjacent && !current->rotate_r->adjacent->tile->dfs_use) {
-      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[0], points.points[1]));
-      SquarePoints next_points = {
-        {
-          apply_transformation(points.points[2], trans),
-          apply_transformation(points.points[3], trans),
-          points.points[1],
-          points.points[0]
-        }
-      };
-      add_queue(&queue, &queue_end, current->rotate_r->adjacent->rotate_r, next_points);
+    if (current->rotate_r->adjacent &&
+        !current->rotate_r->adjacent->tile->dfs_use) {
+      r4transform trans =
+          hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
+              points->points[1]));
+      SquarePoints *next_points = malloc(sizeof(SquarePoints));
+      next_points->points[0] = apply_transformation(points->points[2], trans);
+      next_points->points[1] = apply_transformation(points->points[3], trans);
+      next_points->points[2] = points->points[1];
+      next_points->points[3] = points->points[0];
+      add_queue(&queue, &queue_end, current->rotate_r->adjacent->rotate_r,
+        next_points);
     }
 
-    if (current->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[1], points.points[2]));
-      SquarePoints next_points = {
-        {
-          points.points[1],
-          apply_transformation(points.points[3], trans),
-          apply_transformation(points.points[0], trans),
-          points.points[2]
-        }
-      };
-      add_queue(&queue, &queue_end, current->rotate_r->rotate_r->adjacent, next_points);
+    if (ROTATE_B(current)->adjacent &&
+        !ROTATE_B(current)->adjacent->tile->dfs_use) {
+      r4transform trans =
+          hyperbolic_reflection(hyperbolic_midpoint(points->points[1],
+              points->points[2]));
+      SquarePoints *next_points = malloc(sizeof(SquarePoints));
+      next_points->points[0] = points->points[1];
+      next_points->points[1] = apply_transformation(points->points[3], trans);
+      next_points->points[2] = apply_transformation(points->points[0], trans);
+      next_points->points[3] = points->points[2];
+      add_queue(&queue, &queue_end, ROTATE_B(current)->adjacent,
+        next_points);
     }
 
-    if (current->rotate_r->rotate_r->rotate_r->adjacent && !current->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-      r4transform trans = hyperbolic_reflection(hyperbolic_midpoint(points.points[2], points.points[3]));
-      SquarePoints next_points = {
-        {
-          points.points[3],
-          points.points[2],
-          apply_transformation(points.points[0], trans),
-          apply_transformation(points.points[1], trans)
-        }
-      };
-      add_queue(&queue, &queue_end, current->rotate_r->rotate_r->rotate_r->adjacent->rotate_r->rotate_r->rotate_r, next_points);
+    if (ROTATE_L(current)->adjacent &&
+        !ROTATE_L(current)->adjacent->tile->dfs_use) {
+      r4transform trans =
+          hyperbolic_reflection(hyperbolic_midpoint(points->points[2],
+              points->points[3]));
+      SquarePoints *next_points = malloc(sizeof(SquarePoints));
+      next_points->points[0] = points->points[3];
+      next_points->points[1] = points->points[2];
+      next_points->points[2] = apply_transformation(points->points[0], trans);
+      next_points->points[3] = apply_transformation(points->points[1], trans);
+      add_queue(&queue, &queue_end, ROTATE_L(ROTATE_L(current)->adjacent),
+          next_points);
     }
+    free(points);
   }
 }
 
@@ -268,7 +273,7 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 
   cairo_set_line_width(cr, 1/params.scale);
 
-  render_graph(&params, get_origin_square(), graph);
+  render_graph(&params, graph);
 
   cairo_destroy(cr);
 

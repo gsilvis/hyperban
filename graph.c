@@ -28,11 +28,10 @@ void clear_dfs(Graph* graph) {
   if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->dfs_use) {
     clear_dfs(graph->rotate_r->adjacent);
   }
-  if (graph->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->rotate_r->adjacent);
+  if (ROTATE_B(graph)->adjacent && ROTATE_B(graph)->adjacent->tile->dfs_use) {
+    clear_dfs(ROTATE_B(graph)->adjacent);
   }
-  if (graph->rotate_r->rotate_r->rotate_r->adjacent && graph->rotate_r->rotate_r->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->rotate_r->rotate_r->adjacent);
+  if (ROTATE_L(graph)->adjacent && ROTATE_L(graph)->adjacent->tile->dfs_use) {
+    clear_dfs(ROTATE_L(graph)->adjacent);
   }
 }
-

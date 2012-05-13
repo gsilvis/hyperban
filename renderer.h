@@ -50,7 +50,7 @@ typedef struct renderer_params_t RendererParams;
 
 struct graph_queue_t {
   Graph* val;
-  SquarePoints points;
+  SquarePoints *points;
   struct graph_queue_t *next;
 };
 

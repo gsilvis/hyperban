@@ -27,7 +27,8 @@ typedef double matrix_el_t;
 
 typedef matrix_el_t r4vector __attribute__ ((vector_size(sizeof(matrix_el_t)*4)));
 
-typedef matrix_el_t r4transform __attribute__((vector_size(sizeof(matrix_el_t)*4*4)));
+typedef matrix_el_t
+    r4transform __attribute__((vector_size(sizeof(matrix_el_t)*4*4)));
 
 // n = rows in mat1/res, m = cols in mat1/rows in mat2, l = cols in mat2/res
 

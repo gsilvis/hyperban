@@ -29,6 +29,9 @@ struct graph_t {
   Tile *tile;
 };
 
+#define ROTATE_L(g) ((g)->rotate_r->rotate_r->rotate_r)
+#define ROTATE_B(g) ((g)->rotate_r->rotate_r)
+
 typedef struct graph_t Graph;
 
 void clear_dfs(Graph* graph);

@@ -63,11 +63,11 @@ void build_enforce_convexity_left (Graph *g)
   clockwise->rotate_r->adjacent = newclock;
   newclock->adjacent = clockwise->rotate_r;
   /* Lock ccwise to newcc */
-  ccwise->rotate_r->rotate_r->rotate_r->adjacent = newcc;
-  newcc->adjacent = ccwise->rotate_r->rotate_r->rotate_r;
+  ROTATE_L(ccwise)->adjacent = newcc;
+  newcc->adjacent = ROTATE_L(ccwise);
   /* Link newclock to newcc */
-  newclock->rotate_r->adjacent = newcc->rotate_r->rotate_r->rotate_r;
-  newcc->rotate_r->rotate_r->rotate_r->adjacent = newclock->rotate_r;
+  newclock->rotate_r->adjacent = ROTATE_L(newcc);
+  ROTATE_L(newcc)->adjacent = newclock->rotate_r;
 
   /* recurse counterclockwise around the perimeter of the graph */
   build_enforce_convexity_left(clockwise->rotate_r);
@@ -80,7 +80,7 @@ void build_enforce_convexity_right (Graph *g)
 
 
   Graph *clockwise = g->adjacent;
-  Graph *ccwise = g->rotate_r->rotate_r->rotate_r->adjacent;
+  Graph *ccwise = ROTATE_L(g)->adjacent;
 
   if (!clockwise || !ccwise)
     return; /* No need to change anything */
@@ -94,14 +94,14 @@ void build_enforce_convexity_right (Graph *g)
   clockwise->rotate_r->adjacent = newclock;
   newclock->adjacent = clockwise->rotate_r;
   /* Lock ccwise to newcc */
-  ccwise->rotate_r->rotate_r->rotate_r->adjacent = newcc;
-  newcc->adjacent = ccwise->rotate_r->rotate_r->rotate_r;
+  ROTATE_L(ccwise)->adjacent = newcc;
+  newcc->adjacent = ROTATE_L(ccwise);
   /* Link newclock to newcc */
-  newclock->rotate_r->adjacent = newcc->rotate_r->rotate_r->rotate_r;
-  newcc->rotate_r->rotate_r->rotate_r->adjacent = newclock->rotate_r;
+  newclock->rotate_r->adjacent = ROTATE_L(newcc);
+  ROTATE_L(newcc)->adjacent = newclock->rotate_r;
 
   /* recurse clockwise around the perimeter of the graph */
-  build_enforce_convexity_right(ccwise->rotate_r->rotate_r->rotate_r);
+  build_enforce_convexity_right(ROTATE_L(ccwise));
 }
 
 
@@ -135,19 +135,14 @@ void build_add_node (Graph *graph, SavedTile *tile)
               build_enforce_convexity_right(graph);
             }
 
-          graph = graph->adjacent->rotate_r->rotate_r;
+          graph = ROTATE_B(graph->adjacent);
           break;
         }
     }
 
   graph->tile->tile_type = tile->tile_type;
   graph->tile->agent = tile->agent;
-
-
-
 }
-
-
 
 Graph *build_graph (SavedTile *tiles, size_t num_tiles)
 {

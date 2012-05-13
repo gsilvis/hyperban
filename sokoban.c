@@ -51,7 +51,7 @@ int perform_move (Board *b, Move move)
     behind = behind->rotate_r;
   behind = behind->adjacent;
 
-  if (behind->tile->tile_type == TILE_TYPE_WALL) 
+  if (behind->tile->tile_type == TILE_TYPE_WALL)
     return RESULT_NO_MOVE_POSSIBLE; /* Push blocked by wall. */
 
   if (behind->tile->tile_type == AGENT_BOX)
