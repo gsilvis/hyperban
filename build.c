@@ -105,6 +105,21 @@ void build_enforce_convexity_right (Graph *g)
 }
 
 
+void build_wall_in (Graph *graph)
+{
+  for (size_t i = 0; i < 4; i++)
+    {
+      if (!graph->adjacent)
+        {
+          graph->adjacent = build_initial_node();
+          graph->adjacent->adjacent = graph;
+          build_enforce_convexity_left(graph->adjacent);
+          build_enforce_convexity_right(graph->adjacent);
+        }
+      graph = graph->rotate_r;
+    }
+}
+
 void build_add_node (Graph *graph, SavedTile *tile)
 {
   char *direction_ptr = tile->path;
@@ -142,6 +157,9 @@ void build_add_node (Graph *graph, SavedTile *tile)
 
   graph->tile->tile_type = tile->tile_type;
   graph->tile->agent = tile->agent;
+
+  if (tile->tile_type != TILE_TYPE_WALL)
+    build_wall_in(graph);
 }
 
 Graph *build_graph (SavedTile *tiles, size_t num_tiles)
