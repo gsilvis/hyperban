@@ -140,12 +140,17 @@ void build_wall_in (Graph *graph)
     }
 }
 
-void build_add_node (Graph *graph, SavedTile *tile)
+int build_add_node (Graph *graph, SavedTile *tile)
 {
+  if (!tile)
+    return 0;
+
   char *direction_ptr = tile->path;
 
+
   if (!direction_ptr)
-    return; /* If direction_ptr is null, go away. */
+    return 0; /* If direction_ptr is null, we add nothing. */
+  
 
   for (; *direction_ptr; direction_ptr++)
     {
@@ -180,15 +185,24 @@ void build_add_node (Graph *graph, SavedTile *tile)
 
   if (tile->tile_type != TILE_TYPE_WALL)
     build_wall_in(graph);
+
+  return 1;
 }
 
-Graph *build_graph (SavedTile *tiles, size_t num_tiles)
+Graph *build_graph (SavedTile *tiles)
 {
   Graph *g = build_initial_node();
   build_wall_in(g);
   g->tile->tile_type = TILE_TYPE_SPACE;
-  for (size_t i = 0; i < num_tiles; i++)
-    build_add_node(g, &tiles[i]);
+  int cont = 1;
+  for (size_t i = 0; cont; i++)
+    {
+      if (build_add_node(g, &(tiles[i])))
+        continue;
+      else
+        break;
+    }
+
   return g;
 }
 

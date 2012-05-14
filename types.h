@@ -49,5 +49,28 @@ typedef struct {
   char agent;
 } SavedTile;
 
+typedef struct {
+  char *key;
+  char mandatory;
+  char *value_s;
+  int value_i;
+} ConfigOption;
+
+
+struct graph_t {
+  struct graph_t *rotate_r;
+  struct graph_t *adjacent;
+  Tile *tile;
+};
+
+typedef struct graph_t Graph;
+
+typedef struct {
+  Graph* graph;
+  int unsolved;
+  int level_number;
+  char *level_title;
+  /* expand as needed */
+} Board;
 
 #endif /* __HYBERBAN__TYPES_H */

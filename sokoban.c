@@ -61,6 +61,12 @@ int perform_move (Board *b, Move move)
   new->tile->agent = AGENT_NONE;
   behind->tile->agent = AGENT_BOX;
 
+  if (new->tile->tile_type == TILE_TYPE_TARGET)
+    (b->unsolved)++;
+
+  if (behind->tile->tile_type == TILE_TYPE_TARGET)
+    (b->unsolved)--;
+
   b->graph = new;
   return RESULT_PUSH; /* Push sucessful */
 }

@@ -6,7 +6,7 @@ CFLAGS += -g
 CFLAGS += `pkg-config gtk+-2.0 --cflags`
 LDFLAGS = $(CFLAGS) `pkg-config gtk+-2.0 --libs` -lm
 
-CFILES = renderer.c build.c sokoban.c level.c graph.c
+CFILES = renderer.c build.c sokoban.c level.c graph.c audit.c board.c
 OFILES = $(patsubst %.c, %.o, $(CFILES))
 
 all: renderer

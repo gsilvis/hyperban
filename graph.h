@@ -23,16 +23,8 @@
 
 #include "types.h"
 
-struct graph_t {
-  struct graph_t *rotate_r;
-  struct graph_t *adjacent;
-  Tile *tile;
-};
-
 #define ROTATE_L(g) ((g)->rotate_r->rotate_r->rotate_r)
 #define ROTATE_B(g) ((g)->rotate_r->rotate_r)
-
-typedef struct graph_t Graph;
 
 void clear_dfs(Graph* graph);
 

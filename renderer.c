@@ -33,6 +33,7 @@
 #include "build.h"
 #include "consts.h"
 #include "sokoban.h"
+#include "board.h"
 
 #define RENDERER_MIN_WIDTH 240
 #define RENDERER_MIN_HEIGHT 240
@@ -395,32 +396,31 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  int num_tiles, unsolved;
 
-  SavedTile *map = level_parse_file(levelfh, &num_tiles, &unsolved);
+  SavedTile *map = NULL;
+  ConfigOption *cfg = NULL;
+  level_parse_file(levelfh, &map, &cfg);
 
   fclose(levelfh);
 
-  if (map == NULL) {
+  if ((map == NULL) || (cfg == NULL)) {
     fprintf(stderr, "Could not succesfully parse %s.\n", level);
     return 1;
   }
 
-  Graph* graph = build_graph(map, num_tiles);
+  Board* board = board_assemble_full(map, cfg);
 
-  if (graph == NULL) {
-    fprintf(stderr, "Could not succesfully create graph from %s.\n", level);
+  if (board == NULL) {
+    fprintf(stderr, "Could not succesfully create board from %s.\n", level);
     return 1;
   }
-
-  Board board = {graph, unsolved};
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit),
       NULL);
 
-  GtkWidget *renderer = get_renderer_widget(&board);
+  GtkWidget *renderer = get_renderer_widget(board);
   gtk_container_add(GTK_CONTAINER(window), renderer);
 
   gtk_widget_show_all(window);

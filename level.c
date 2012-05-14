@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "level_format.h"
+
 
 int level_get_line (FILE *f, char **line_ptr, size_t *size)
 {
@@ -34,83 +34,129 @@ int level_get_line (FILE *f, char **line_ptr, size_t *size)
     return level_get_line(f, line_ptr, size);
 }
 
-SavedTile *level_fail (SavedTile *r, size_t r_used, char *l)
+int level_fail (SavedTile *r,
+                size_t r_used,
+                ConfigOption *opt,
+                size_t opt_used,
+                char *l)
 {
-  for (size_t i = 0; i < r_used; i++) {
+  for (size_t i = 0; i < r_used; i++)
     free(r[i].path);
-  }
   free(r);
+  for (size_t i = 0; i < opt_used; i++)
+    {
+      free(opt[i].key);
+      free(opt[i].value_s);
+    }
+  free(opt);
   free(l);
-  return NULL;
+
+  return -1;
 }
 
-SavedTile *level_parse_file (FILE *f, int *num_tiles, int *u)
+int level_parse_file (FILE *f,
+                      SavedTile **tiles,
+                      ConfigOption **options)
 {
   char *line_ptr = NULL;
-  SavedTile *returnee = NULL;
   size_t size = 0;
+
+  SavedTile *r = NULL;
   size_t r_size = 4;
   size_t r_used = 0;
 
-  if (num_tiles == NULL || u == NULL)
-    return level_fail(returnee, r_used, line_ptr);
+  ConfigOption *opt = NULL;
+  size_t opt_size = 4;
+  size_t opt_used = 0;
 
-  returnee = malloc(r_size * sizeof(SavedTile));
+  r = malloc(r_size * sizeof(SavedTile));
+  opt = malloc(r_size * sizeof(ConfigOption));
 
-  int unsolved = 0;
-  int audit = 0;
-
+  if (tiles == NULL ||
+      options == NULL ||
+      r == NULL ||
+      opt == NULL)
+    return level_fail(r, r_used, opt, opt_used, line_ptr);
+ 
   while (level_get_line(f, &line_ptr, &size) != -1)
     {
       if (line_ptr[0] == '\0')
         break; /* EOF: done */
-      if (line_ptr[0] == LF_KEYVALUE_SIGNAL)
+      else if (line_ptr[0] == LF_KEYVALUE_SIGNAL)
         {
+          /* Many possibilities here. Might be one or two bangs.  Might be
+           * spaces around the ':'.  RHS might be an integer, or it might be a
+           * string in quotes.
+           */
+
+          char *parsee = line_ptr + 1; /* Omit first '!' */
           if (line_ptr[1] == LF_KEYVALUE_SIGNAL)
-            return level_fail(returnee, r_used, line_ptr);
-          /* could not parse mandatory field. */
+            {
+              opt[opt_used].mandatory = 1;
+              parsee++; /* Omit second '!' */
+            }
           else
-            continue;
-          /* could not parse optional field. */
+            opt[opt_used].mandatory = 0;
+
+          opt[opt_used].key = NULL;
+          opt[opt_used].value_s = NULL; /* required by %ms */
+
+          if ((2 != sscanf(parsee,
+                           " %m[a-zA-Z0-9_] : %d",
+                           &(opt[opt_used].key),
+                           &(opt[opt_used].value_i))) &&
+              (2 != sscanf(parsee,
+                           " %m[a-zA-Z0-9_] : \"%m[^\"]\"",
+                           &(opt[opt_used].key),
+                           &(opt[opt_used].value_s))))
+            return level_fail(r, r_used, opt, opt_used, line_ptr);
+          
+          opt_used++;
+          if (opt_used >= opt_size)
+            {
+              opt_size *= 2;
+              opt = realloc(opt, opt_size * sizeof(ConfigOption));
+            }
         }
-
-      returnee[r_used].path = NULL; /* required to use the %ms sscanf
-                                       extension */
-
-      if (sscanf(line_ptr,
-                 "%hhd"LF_DELIM"%hhd"LF_DELIM"%m[a-zA-Z]",
-                 &(returnee[r_used].tile_type),
-                 &(returnee[r_used].agent),
-                 &(returnee[r_used].path)) < 2)
-        return level_fail(returnee, r_used, line_ptr);
-
-
-      if ((returnee[r_used].tile_type == TILE_TYPE_TARGET) &&
-          (returnee[r_used].agent != AGENT_BOX))
-        unsolved++;
-
-      if (returnee[r_used].tile_type == TILE_TYPE_TARGET)
-        audit++;
-      if (returnee[r_used].agent == AGENT_BOX)
-        audit--;
-
-
-      r_used++;
-      if (r_used >= r_size)
+      else
         {
-          r_size *= 2;
-          returnee = realloc(returnee, r_size * sizeof(SavedTile));
+          r[r_used].path = NULL; /* required to use the %ms sscanf
+                                       extension */
+          if (sscanf(line_ptr,
+                     " %hhd "LF_DELIM" %hhd "LF_DELIM" %m[a-zA-Z]",
+                     &(r[r_used].tile_type),
+                     &(r[r_used].agent),
+                     &(r[r_used].path)) < 2)
+            return level_fail(r, r_used, opt, opt_used, line_ptr);
+
+          if (!(r[r_used].path))
+            {
+              /* NULL path: replace it with empty null-terminated string */
+              r[r_used].path = calloc(1, sizeof(char));
+            }
+
+          r_used++;
+          if (r_used >= r_size)
+            {
+              r_size *= 2;
+              r = realloc(r, r_size * sizeof(SavedTile));
+            }
         }
     }
 
-  if (audit) /* Different number of blocks and targets: bad level. */
-    return level_fail(returnee, r_used, line_ptr);
+  /* null terminate the arrays */
+  memset(&(r[r_used]), 0, sizeof(SavedTile));
+  memset(&(opt[opt_used]), 0, sizeof(ConfigOption));
   
   /* trim returnee to be the right size */
-  returnee = realloc(returnee, r_used * sizeof(SavedTile));
+  r = realloc(r, (r_used + 1) * sizeof(SavedTile));
+  opt = realloc(opt, (opt_used + 1) * sizeof(ConfigOption));
 
-  *num_tiles = r_used;
-  *u = unsolved;
+  /* "Return" */
+  *tiles = r;
+  *options = opt;
+
   free(line_ptr);
-  return returnee; /* Success */
+  return 0; /* Success */
 }
+
