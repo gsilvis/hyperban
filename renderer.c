@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <getopt.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
@@ -37,7 +36,7 @@
 #define RENDERER_MIN_WIDTH 240
 #define RENDERER_MIN_HEIGHT 240
 
-#define MAX_ARC_RADIUS 10E4
+#define MAX_ARC_RADIUS 10E1
 
 static HyperbolicProjection projection = DEFAULT_PROJECTION;
 
@@ -353,35 +352,29 @@ int main(int argc, char *argv[]) {
   gdk_threads_init();
   gdk_threads_enter();
 
-  gtk_init(&argc, &argv);
+  GError *error = NULL;
+  gboolean klein = FALSE;
+  gboolean poincare = FALSE;
+  gchar* level = NULL;
 
-  char* level = NULL;
+  GOptionContext *context = g_option_context_new(NULL);
+  GOptionEntry options[] = {
+    {"poincare", 'P', 0, G_OPTION_ARG_NONE, &poincare,
+        "Poincare Projection", NULL},
+    {"klein", 'K', 0, G_OPTION_ARG_NONE, &klein,
+        "Klein Projection", NULL},
+    {"level", 'l', 0, G_OPTION_ARG_FILENAME, &level,
+        "Level File", "LEVEL"},
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
+  };
+  g_option_context_add_main_entries(context, options, NULL);
+  g_option_context_add_group(context, gtk_get_option_group(TRUE));
+  g_option_context_parse(context, &argc, &argv, &error);
 
-  while (1) {
-    static struct option long_options[] = {
-      {"level", required_argument, 0, 'l'},
-      {"poincare", no_argument, 0, 'P'},
-      {"klein", no_argument, 0, 'K'},
-      {0, 0, 0, 0}
-    };
-    int option_index = 0;
-    int c = getopt_long(argc, argv, "l:PK", long_options, &option_index);
-    if (c == -1) break;
-    switch(c) {
-    case 'l':
-      level = optarg;
-      break;
-    case 'P':
-      projection = PROJECTION_POINCARE;
-      break;
-    case 'K':
-      projection = PROJECTION_KLEIN;
-      break;
-    case '?':
-      break;
-    default:
-      abort();
-    }
+  if (klein || !poincare) {
+    projection = PROJECTION_KLEIN;
+  } else {
+    projection = PROJECTION_POINCARE;
   }
 
   if (level == NULL) {
