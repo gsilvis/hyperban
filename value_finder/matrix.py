@@ -3,6 +3,9 @@
 import sympy
 import mpmath
 
+mpmath.mp.prec = 95
+mpmath.mp.pretty = True
+
 def normalize(a):
     return a/a[3]
 
@@ -47,60 +50,61 @@ def rotate(theta):
 def matratsimp(mat):
     return sympy.matrices.Matrix(mat.rows, mat.cols, lambda i, j: sympy.ratsimp(mat[i, j]))
 
-print "myrotate"
+#print "myrotate"
 myrotate = rotate(2 * sympy.pi / 5)
-print myrotate
-print
+#print myrotate
+#print
 
-print "m"
+#print "m"
 m = sympy.Symbol("m")
-print m
-print
+#print m
+#print
 
-print "mynorthvertex"
+#print "mynorthvertex"
 mynorthvertex = sympy.matrices.Matrix([0, m, 0, 1])
-print mynorthvertex
-print
+#print mynorthvertex
+#print
 
-print "mywestvertex"
+#print "mywestvertex"
 mywestvertex = sympy.matrices.Matrix([-m, 0, 0, 1])
-print mywestvertex
-print
+#print mywestvertex
+#print
 
-print "myeastvertex"
+#print "myeastvertex"
 myeastvertex = sympy.matrices.Matrix([m, 0, 0, 1])
-print myeastvertex
-print
+#print myeastvertex
+#print
 
-print "translatesouth"
+#print "translatesouth"
 translatesouth = translate(mynorthvertex, origin)
-print translatesouth
-print
+#print translatesouth
+#print
 
-print "translatenorth"
+#print "translatenorth"
 translatenorth = translate(origin, mynorthvertex)
-print translatenorth
-print
+#print translatenorth
+#print
 
-print "mytransformation"
+#print "mytransformation"
 mytransformation = translatenorth * myrotate * translatesouth
 mytransformation = matratsimp(mytransformation)
-print mytransformation
-print
+#print mytransformation
+#print
 
-print "myresult"
+#print "myresult"
 myresult = normalize(mytransformation * mywestvertex)
 myresult = matratsimp(myresult)
-print myresult
-print
+#print myresult
+#print
 
-print "myerror"
+#print "myerror"
 myerror = myresult - myeastvertex
 myerror = myerror[1]
-print myerror
+#print myerror
 myerror = sympy.simplify(myerror)
-print myerror
-print
-k = mpmath.findroot((lambda xi: myerror.subs(m, xi)), (0.02, 0.9), solver=mpmath.calculus.optimization.Bisection) 
-print k
+#print myerror
+#print
+k = mpmath.findroot((lambda xi: myerror.subs(m, xi)),
+        (0.02, 0.9), solver=mpmath.calculus.optimization.Bisection)
+print "Result:", k
 
