@@ -34,8 +34,8 @@
 #include "consts.h"
 #include "sokoban.h"
 
-#define RENDERER_MIN_WIDTH 480
-#define RENDERER_MIN_HEIGHT 480
+#define RENDERER_MIN_WIDTH 240
+#define RENDERER_MIN_HEIGHT 240
 
 #define MAX_ARC_RADIUS 10E4
 
@@ -252,14 +252,17 @@ static void renderer_draw(GtkWidget *widget, Graph* graph) {
   cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
   cairo_set_line_width(cr, 2);
 
-  GtkRequisition requisition;
+  GtkAllocation allocation;
 
-  gtk_widget_size_request(widget, &requisition);
+  gtk_widget_get_allocation(widget, &allocation);
 
-  gint originx = requisition.width / 2;
-  gint originy = requisition.height / 2;
+  double radius = fmin(allocation.width, allocation.height)/2;
+  radius -= RENDERER_BORDER;
 
-  cairo_arc(cr, originx, originy, requisition.width/2 - RENDERER_BORDER,
+  double originx = allocation.width / 2;
+  double originy = allocation.height / 2;
+
+  cairo_arc(cr, originx, originy, radius,
       0, 2 * M_PI);
 
   cairo_set_source_rgb(cr, .5, .5, .5);
@@ -273,7 +276,7 @@ static void renderer_draw(GtkWidget *widget, Graph* graph) {
   RendererParams params = {
     cr,
     {originx, originy},
-    requisition.width/2 - RENDERER_BORDER,
+    radius,
     projection
   };
 
