@@ -1,0 +1,15 @@
+0|0|  # You can also put a comment here.
+0|1|F
+0|0|FF#or even right here
+0|0|FFF
+0|0|FFFF
+0|0|FFFFF
+2|0|FFFFFF
+0|0|FFFFFFRF
+0|1|RF
+0|0|RFF
+0|0|RFFF
+0|0|RFFFF
+0|0|RFFFFF
+2|0|RFFFFFF
+0|0|RFFFFFFLF

@@ -151,7 +151,7 @@ extern inline r4vector weierstrass2poincare(r4vector a) {
 
 extern inline r4vector poincare2weierstrass(r4vector a) {
   matrix_el_t d = 1.0 / (1 - a[0]*a[0] - a[1]*a[1]);
-  r4vector result = {d*2*a[0], d*2*a[1], d*(1 + a[0] * a[0] + a[1] * a[1]), 0 };
+  r4vector result = {d*2*a[0], d*2*a[1], d*(1 + a[0] * a[0] + a[1] * a[1]), 0};
   return result;
 }
 
