@@ -45,12 +45,17 @@ struct renderer_params_t {
   double origin[2];
   double scale;
   HyperbolicProjection projection;
-  void *data;
+  SquarePoints *origin_square;
+  void *data; // In practice this is a cairo_t*
 };
 
 typedef struct renderer_params_t RendererParams;
 
 SquarePoints *get_origin_square(void);
+
+SquarePoints *move_square(SquarePoints *points, Move m);
+
+SquarePoints *transform_square(SquarePoints *points, r4transform transform);
 
 void render_graph(RendererParams *params, Graph *graph);
 

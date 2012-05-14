@@ -34,6 +34,19 @@ struct graph_queue_t {
 
 typedef struct graph_queue_t GraphQueue;
 
+SquarePoints *transform_square(SquarePoints *square, r4transform trans) {
+  SquarePoints *result = malloc(sizeof(SquarePoints));
+  *result = (SquarePoints) {
+    {
+      apply_transformation(square->points[0], trans),
+      apply_transformation(square->points[1], trans),
+      apply_transformation(square->points[2], trans),
+      apply_transformation(square->points[3], trans)
+    }
+  };
+  return result;
+}
+
 /* returns points in clockwise order */
 SquarePoints *get_origin_square(void) {
   SquarePoints *res = malloc(sizeof(SquarePoints));
@@ -68,7 +81,8 @@ void render_graph(RendererParams *params, Graph *graph) {
   queue->val = graph;
   queue->next = NULL;
   queue->dist = 1;
-  queue->points = get_origin_square();
+  queue->points = malloc(sizeof(SquarePoints));
+  *queue->points = *params->origin_square;
 
   while (queue != NULL) {
     Graph *current = queue->val;
@@ -88,59 +102,67 @@ void render_graph(RendererParams *params, Graph *graph) {
     }
 
     if (current->adjacent && !current->adjacent->tile->dfs_use) {
-      r4transform trans =
-          hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
-              points->points[3]));
-      SquarePoints *next_points = malloc(sizeof(SquarePoints));
-      next_points->points[0] = apply_transformation(points->points[2], trans);
-      next_points->points[1] = points->points[0];
-      next_points->points[2] = points->points[3];
-      next_points->points[3] = apply_transformation(points->points[1], trans);
-      add_queue(&queue, &queue_end, ROTATE_B(current->adjacent), next_points,
-          d+1);
+      add_queue(&queue, &queue_end, ROTATE_B(current->adjacent),
+          move_square(points, MOVE_UP), d+1);
     }
 
     if (current->rotate_r->adjacent &&
         !current->rotate_r->adjacent->tile->dfs_use) {
-      r4transform trans =
-          hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
-              points->points[1]));
-      SquarePoints *next_points = malloc(sizeof(SquarePoints));
-      next_points->points[0] = apply_transformation(points->points[2], trans);
-      next_points->points[1] = apply_transformation(points->points[3], trans);
-      next_points->points[2] = points->points[1];
-      next_points->points[3] = points->points[0];
       add_queue(&queue, &queue_end, current->rotate_r->adjacent->rotate_r,
-        next_points, d+1);
+          move_square(points, MOVE_RIGHT), d+1);
     }
 
     if (ROTATE_B(current)->adjacent &&
         !ROTATE_B(current)->adjacent->tile->dfs_use) {
-      r4transform trans =
-          hyperbolic_reflection(hyperbolic_midpoint(points->points[1],
-              points->points[2]));
-      SquarePoints *next_points = malloc(sizeof(SquarePoints));
-      next_points->points[0] = points->points[1];
-      next_points->points[1] = apply_transformation(points->points[3], trans);
-      next_points->points[2] = apply_transformation(points->points[0], trans);
-      next_points->points[3] = points->points[2];
       add_queue(&queue, &queue_end, ROTATE_B(current)->adjacent,
-        next_points, d+1);
+          move_square(points, MOVE_DOWN), d+1);
     }
 
     if (ROTATE_L(current)->adjacent &&
         !ROTATE_L(current)->adjacent->tile->dfs_use) {
-      r4transform trans =
-          hyperbolic_reflection(hyperbolic_midpoint(points->points[2],
-              points->points[3]));
-      SquarePoints *next_points = malloc(sizeof(SquarePoints));
-      next_points->points[0] = points->points[3];
-      next_points->points[1] = points->points[2];
-      next_points->points[2] = apply_transformation(points->points[0], trans);
-      next_points->points[3] = apply_transformation(points->points[1], trans);
       add_queue(&queue, &queue_end, ROTATE_L(ROTATE_L(current)->adjacent),
-          next_points, d+1);
+          move_square(points, MOVE_LEFT), d+1);
     }
     free(points);
   }
+}
+
+SquarePoints *move_square(SquarePoints *points, Move m) {
+  r4transform trans;
+  SquarePoints *next_points = malloc(sizeof(SquarePoints));
+  switch (m) {
+  case MOVE_UP:
+    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
+        points->points[3]));
+    next_points->points[0] = apply_transformation(points->points[2], trans);
+    next_points->points[1] = points->points[0];
+    next_points->points[2] = points->points[3];
+    next_points->points[3] = apply_transformation(points->points[1], trans);
+    break;
+  case MOVE_RIGHT:
+    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
+        points->points[1]));
+    next_points->points[0] = apply_transformation(points->points[2], trans);
+    next_points->points[1] = apply_transformation(points->points[3], trans);
+    next_points->points[2] = points->points[1];
+    next_points->points[3] = points->points[0];
+    break;
+  case MOVE_DOWN:
+    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[1],
+        points->points[2]));
+    next_points->points[0] = points->points[1];
+    next_points->points[1] = apply_transformation(points->points[3], trans);
+    next_points->points[2] = apply_transformation(points->points[0], trans);
+    next_points->points[3] = points->points[2];
+    break;
+  case MOVE_LEFT:
+    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[2],
+        points->points[3]));
+    next_points->points[0] = points->points[3];
+    next_points->points[1] = points->points[2];
+    next_points->points[2] = apply_transformation(points->points[0], trans);
+    next_points->points[3] = apply_transformation(points->points[1], trans);
+    break;
+  }
+  return next_points;
 }

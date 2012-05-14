@@ -22,6 +22,7 @@
 #define __HYPERBAN_MATRIX_H
 
 #include <math.h>
+#include <stddef.h>
 
 typedef double matrix_el_t;
 
@@ -45,12 +46,12 @@ typedef matrix_el_t
     } \
   } while (0)
 
-extern inline r4vector const_r4vector(matrix_el_t a) {
+static inline r4vector const_r4vector(matrix_el_t a) {
   r4vector res = { a, a, a, a };
   return res;
 }
 
-extern inline r4transform const_r4transform(matrix_el_t a) {
+static inline r4transform const_r4transform(matrix_el_t a) {
   r4transform res = {
     a, a, a, a,
     a, a, a, a,
@@ -60,34 +61,35 @@ extern inline r4transform const_r4transform(matrix_el_t a) {
   return res;
 }
 
-extern inline matrix_el_t minkowski_inner_product(r4vector a, r4vector b) {
+static inline matrix_el_t minkowski_inner_product(r4vector a, r4vector b) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] - a[3] * b[3];
 }
 
-extern inline r4transform outer_product(r4vector a, r4vector b) {
+static inline r4transform outer_product(r4vector a, r4vector b) {
   r4transform result;
   _MAT_MULT(a, b, 4, 1, 4, result);
   return result;
 }
 
-extern inline r4vector normalize_r4vector(r4vector a) {
+static inline r4vector normalize_r4vector(r4vector a) {
   r4vector result = { a[0]/a[3], a[1]/a[3], a[2]/a[3], 1 };
   return result;
 }
 
-extern inline r4vector apply_transformation(r4vector a, r4transform b) {
+static inline r4vector apply_transformation(r4vector a, r4transform b) {
   r4vector result;
   _MAT_MULT(b, a, 4, 4, 1, result);
   return normalize_r4vector(result);
 };
 
-extern inline r4transform multiply_transformations(r4transform a, r4transform b) {
+static inline r4transform multiply_transformations(r4transform a,
+    r4transform b) {
   r4transform result;
   _MAT_MULT(a, b, 4, 4, 4, result);
   return result;
 }
 
-extern inline matrix_el_t hyperbolic_distance(r4vector a, r4vector b) {
+static inline matrix_el_t hyperbolic_distance(r4vector a, r4vector b) {
   matrix_el_t numerator = minkowski_inner_product(a, b);
   numerator *= numerator;
 
@@ -97,7 +99,7 @@ extern inline matrix_el_t hyperbolic_distance(r4vector a, r4vector b) {
   return 2 * acosh(sqrt(numerator/denominator));
 }
 
-extern inline r4transform identity_transform(void) {
+static inline r4transform identity_transform(void) {
   r4transform result = {
     1, 0, 0, 0,
     0, 1, 0, 0,
@@ -107,7 +109,7 @@ extern inline r4transform identity_transform(void) {
   return result;
 }
 
-extern inline r4transform hyperbolic_identity_transform(void) {
+static inline r4transform hyperbolic_identity_transform(void) {
   r4transform result = {
     1, 0, 0, 0,
     0, 1, 0, 0,
@@ -117,7 +119,7 @@ extern inline r4transform hyperbolic_identity_transform(void) {
   return result;
 }
 
-extern inline r4transform hyperbolic_reflection(r4vector a) {
+static inline r4transform hyperbolic_reflection(r4vector a) {
   matrix_el_t denom = minkowski_inner_product(a, a);
 
   r4transform result = multiply_transformations(outer_product(a, a),
@@ -126,7 +128,7 @@ extern inline r4transform hyperbolic_reflection(r4vector a) {
   return identity_transform() - (result * const_r4transform(2.0/denom));
 }
 
-extern inline r4vector hyperbolic_midpoint(r4vector a, r4vector b) {
+static inline r4vector hyperbolic_midpoint(r4vector a, r4vector b) {
   matrix_el_t t1 = minkowski_inner_product(a, a);
   matrix_el_t t2 = minkowski_inner_product(b, b);
   matrix_el_t t3 = minkowski_inner_product(a, b);
@@ -137,40 +139,40 @@ extern inline r4vector hyperbolic_midpoint(r4vector a, r4vector b) {
   return normalize_r4vector(a * const_r4vector(c1) + b * const_r4vector(c2));
 }
 
-extern inline r4transform hyperbolic_translation(r4vector a, r4vector b) {
+static inline r4transform hyperbolic_translation(r4vector a, r4vector b) {
   r4transform rm = hyperbolic_reflection(hyperbolic_midpoint(a, b));
   r4transform ra = hyperbolic_reflection(a);
 
   return multiply_transformations(rm, ra);
 }
 
-extern inline r4vector weierstrass2poincare(r4vector a) {
+static inline r4vector weierstrass2poincare(r4vector a) {
   r4vector result = {a[0] / (a[2] + 1), a[1] / (a[2] + 1), 0, 0};
   return result;
 }
 
-extern inline r4vector poincare2weierstrass(r4vector a) {
+static inline r4vector poincare2weierstrass(r4vector a) {
   matrix_el_t d = 1.0 / (1 - a[0]*a[0] - a[1]*a[1]);
   r4vector result = {d*2*a[0], d*2*a[1], d*(1 + a[0] * a[0] + a[1] * a[1]), 0};
   return result;
 }
 
-extern inline r4vector weierstrass2klein(r4vector a) {
+static inline r4vector weierstrass2klein(r4vector a) {
   r4vector result = {a[0] / a[2], a[1] / a[2], 1, 0};
   return result;
 }
 
-extern inline r4vector klein2weierstrass(r4vector a) {
+static inline r4vector klein2weierstrass(r4vector a) {
   matrix_el_t d = (1.0 / sqrt(1 - a[0]*a[0] - a[1]*a[1]));
   r4vector result = {a[0] * d, a[1] * d, d, 0};
   return result;
 }
 
-extern inline r4vector klein2poincare(r4vector a) {
+static inline r4vector klein2poincare(r4vector a) {
   return weierstrass2poincare(klein2weierstrass(a));
 }
 
-extern inline r4vector poincare2klein(r4vector a) {
+static inline r4vector poincare2klein(r4vector a) {
   return weierstrass2klein(poincare2weierstrass(a));
 }
 
