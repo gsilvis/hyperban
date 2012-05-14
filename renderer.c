@@ -67,16 +67,16 @@ static void draw_tile(RendererParams *params, SquarePoints *points,
   cairo_scale(cr, params->scale, params->scale);
   if (params->projection == PROJECTION_KLEIN) {
     for (size_t i = 0; i < 4; i++) {
-      r4vector projected = points->points[i];
+      r3vector projected = points->points[i];
       cairo_line_to(cr, projected[0], projected[1]);
     }
     cairo_close_path(cr);
   } else if (params->projection == PROJECTION_POINCARE) {
-    r4vector projected[4] = {
+    r3vector projected[4] = {
       klein2poincare(points->points[0]), klein2poincare(points->points[1]),
       klein2poincare(points->points[2]), klein2poincare(points->points[3])
     };
-    r4vector midpoints[4] = {
+    r3vector midpoints[4] = {
       klein2poincare(hyperbolic_midpoint(points->points[0], points->points[1])),
       klein2poincare(hyperbolic_midpoint(points->points[1], points->points[2])),
       klein2poincare(hyperbolic_midpoint(points->points[2], points->points[3])),
@@ -138,14 +138,14 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 
   if (frame != 0) {
     SquarePoints* next = move_square(origin, (m + 2) % 4);
-    r4vector from = hyperbolic_midpoint(
+    r3vector from = hyperbolic_midpoint(
         hyperbolic_midpoint(origin->points[0], origin->points[1]),
         hyperbolic_midpoint(origin->points[2], origin->points[3]));
-    r4vector to = hyperbolic_midpoint(
+    r3vector to = hyperbolic_midpoint(
         hyperbolic_midpoint(next->points[0], next->points[1]),
         hyperbolic_midpoint(next->points[2], next->points[3]));
-    to = to * const_r4vector(frame) + from * const_r4vector(1-frame);
-    r4transform transformation = hyperbolic_translation(from, to);
+    to = to * const_r3vector(frame) + from * const_r3vector(1-frame);
+    r3transform transformation = hyperbolic_translation(from, to);
     SquarePoints *temp = transform_square(origin, transformation);
     free(origin);
     free(next);

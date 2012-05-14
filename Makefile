@@ -1,7 +1,7 @@
 CFLAGS = -Wall -Wextra -std=gnu99
 CFLAGS += -Wno-unused-parameter
 CFLAGS += -march=native
-CFLAGS += -O2
+CFLAGS += -O2 -ffast-math
 CFLAGS += -g
 CFLAGS += `pkg-config gtk+-2.0 --cflags`
 LDFLAGS = $(CFLAGS) `pkg-config gtk+-2.0 --libs` -lm

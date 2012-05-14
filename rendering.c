@@ -34,7 +34,7 @@ struct graph_queue_t {
 
 typedef struct graph_queue_t GraphQueue;
 
-SquarePoints *transform_square(SquarePoints *square, r4transform trans) {
+SquarePoints *transform_square(SquarePoints *square, r3transform trans) {
   SquarePoints *result = malloc(sizeof(SquarePoints));
   *result = (SquarePoints) {
     {
@@ -52,10 +52,10 @@ SquarePoints *get_origin_square(void) {
   SquarePoints *res = malloc(sizeof(SquarePoints));
   *res = (SquarePoints) {
     {
-      { MORE_MAGIC, -MORE_MAGIC, 0, 1},
-      { MORE_MAGIC,  MORE_MAGIC, 0, 1},
-      {-MORE_MAGIC,  MORE_MAGIC, 0, 1},
-      {-MORE_MAGIC, -MORE_MAGIC, 0, 1}
+      { MORE_MAGIC, -MORE_MAGIC, 1},
+      { MORE_MAGIC,  MORE_MAGIC, 1},
+      {-MORE_MAGIC,  MORE_MAGIC, 1},
+      {-MORE_MAGIC, -MORE_MAGIC, 1}
     }
   };
   return res;
@@ -128,7 +128,7 @@ void render_graph(RendererParams *params, Graph *graph) {
 }
 
 SquarePoints *move_square(SquarePoints *points, Move m) {
-  r4transform trans;
+  r3transform trans;
   SquarePoints *next_points = malloc(sizeof(SquarePoints));
   switch (m) {
   case MOVE_UP:

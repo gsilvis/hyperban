@@ -27,7 +27,7 @@
 #define RENDERING_MAX_DIST 7
 
 struct square_points_t {
-  r4vector points[4];
+  r3vector points[4];
 };
 
 typedef struct square_points_t SquarePoints;
@@ -55,8 +55,9 @@ SquarePoints *get_origin_square(void);
 
 SquarePoints *move_square(SquarePoints *points, Move m);
 
-SquarePoints *transform_square(SquarePoints *points, r4transform transform);
+SquarePoints *transform_square(SquarePoints *points, r3transform transform);
 
 void render_graph(RendererParams *params, Graph *graph);
 
 #endif /* __HYPERBAN_RENDERING_H */
+
