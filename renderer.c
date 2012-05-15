@@ -51,6 +51,7 @@ struct renderer_widget_options_t {
   Board* board;
   gboolean drawing;
   gboolean animation;
+  double scale;
   pthread_t thread;
   Move move; // simply to ease pasing a pointer to this struct to a thread
   GtkWidget *widget;
@@ -118,10 +119,6 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 
   double originx = width / 2;
   double originy = height / 2;
-
-  cairo_set_source_rgb(cr, 1, 1, 1);
-  cairo_rectangle(cr, 0, 0, width, height);
-  cairo_fill(cr);
 
   cairo_arc(cr, originx, originy, radius,
       0, 2 * M_PI);
@@ -195,12 +192,16 @@ void *draw_thread(void *ptr) {
 
   int width, height;
 
+  cairo_matrix_t mat;
+
+  cairo_matrix_init_scale(&mat, 1.0/opts->scale, 1.0/opts->scale);
+
   gdk_threads_enter();
   gdk_pixmap_get_size(opts->pixmap, &width, &height);
   gdk_threads_leave();
 
   cairo_surface_t *cst = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-      width, height);
+      width / opts->scale, height / opts->scale);
   Graph* oldpos = opts->board->graph;
   int res = 0;
   if (opts->move >= 0) {
@@ -229,7 +230,7 @@ void *draw_thread(void *ptr) {
       double frame = (fmin(RENDERER_ANIMATION_TIME, frame_start-start) /
           RENDERER_ANIMATION_TIME);
 
-      renderer_draw(cr, width, height, oldpos,
+      renderer_draw(cr, width / opts->scale, height / opts->scale, oldpos,
           opts->projection, opts->move, frame);
 
       cairo_destroy(cr);
@@ -237,7 +238,10 @@ void *draw_thread(void *ptr) {
       gdk_threads_enter();
 
       cairo_t *cr_win = gdk_cairo_create(opts->pixmap);
+      cairo_set_source_rgb(cr_win, 1, 1, 1);
+      cairo_paint(cr_win);
       cairo_set_source_surface(cr_win, cst, 0, 0);
+      cairo_pattern_set_matrix(cairo_get_source(cr_win), &mat);
       cairo_paint(cr_win);
       cairo_destroy(cr_win);
 
@@ -260,14 +264,18 @@ void *draw_thread(void *ptr) {
   }
   cairo_t *cr = cairo_create(cst);
 
-  renderer_draw(cr, width, height, opts->board->graph, opts->projection, 0, 0);
+  renderer_draw(cr, width / opts->scale, height / opts->scale,
+      opts->board->graph, opts->projection, 0, 0);
 
   cairo_destroy(cr);
 
   gdk_threads_enter();
 
   cairo_t *cr_win = gdk_cairo_create(opts->pixmap);
+  cairo_set_source_rgb(cr_win, 1, 1, 1);
+  cairo_paint(cr_win);
   cairo_set_source_surface(cr_win, cst, 0, 0);
+  cairo_pattern_set_matrix(cairo_get_source(cr_win), &mat);
   cairo_paint(cr_win);
   cairo_destroy(cr_win);
 
@@ -407,6 +415,8 @@ RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   gboolean klein = FALSE;
   gboolean poincare = FALSE;
   gchar* level = NULL;
+  double scale = 1;
+  gchar* scale_str = NULL;
   HyperbolicProjection projection = DEFAULT_PROJECTION;
   gboolean animation = FALSE;
   gboolean noanimation = FALSE;
@@ -424,12 +434,20 @@ RendererWidgetOptions *parse_args(int argc, char *argv[]) {
         "Animate Moves (takes precedence)", NULL},
     {"no-animation", 'N', 0, G_OPTION_ARG_NONE, &noanimation,
         "Don't Animate Moves", NULL},
+    {"scale", 'S', 0, G_OPTION_ARG_STRING, &scale_str,
+        "Render at a lower resolution (SCALE of 2 means scale"
+        " rendered image x2 before displaying)", "SCALE"},
     { NULL, 0, 0, 0, NULL, NULL, NULL }
   };
   g_option_context_add_main_entries(context, options, NULL);
   g_option_context_add_group(context, gtk_get_option_group(TRUE));
-  g_option_context_parse(context, &argc, &argv, &error);
+  gboolean res = g_option_context_parse(context, &argc, &argv, &error);
   g_option_context_free(context);
+
+  if (!res) {
+    fprintf(stderr, "Invalid command line options!\n");
+    return NULL;
+  }
 
   if (klein || !poincare) {
     projection = PROJECTION_KLEIN;
@@ -438,6 +456,12 @@ RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   }
 
   animation = (animation || (DEFAULT_ANIMATION && !noanimation));
+
+  if (scale_str != NULL) {
+    if (!sscanf(scale_str, "%lf", &scale)) {
+      fprintf(stderr, "Could not parse scale!\n");
+    }
+  }
 
   if (level == NULL) {
     fprintf(stderr, "Required argument level not specified.\n");
@@ -475,6 +499,7 @@ RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   opts->board = board;
   g_atomic_int_set(&opts->drawing, FALSE);
   opts->animation = animation;
+  opts->scale = scale;
 
   return opts;
 }
