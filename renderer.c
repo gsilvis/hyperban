@@ -55,6 +55,8 @@ struct renderer_widget_options_t {
   Move move; // simply to ease pasing a pointer to this struct to a thread
   GtkWidget *widget;
   GdkPixmap *pixmap;
+  GtkLabel *moves_label;
+  GtkLabel *boxes_label;
 };
 
 typedef struct renderer_widget_options_t RendererWidgetOptions;
@@ -170,6 +172,23 @@ static void renderer_draw(cairo_t *cr, double width, double height,
   return;
 }
 
+void set_labels(RendererWidgetOptions *opts) {
+  size_t s;
+  char *t;
+  s = snprintf(NULL, 0, BOXES_TEXT, opts->board->unsolved);
+  t = malloc(sizeof(char)*s);
+  sprintf(t, BOXES_TEXT, opts->board->unsolved);
+  gtk_label_set_text(opts->boxes_label, t);
+  free(t);
+
+  s = snprintf(NULL, 0, MOVES_TEXT, opts->board->number_moves);
+  t = malloc(sizeof(char)*s);
+  sprintf(t, MOVES_TEXT, opts->board->number_moves);
+  gtk_label_set_text(opts->moves_label, t);
+  free(t);
+
+}
+
 void *draw_thread(void *ptr) {
   RendererWidgetOptions *opts = ptr;
   if (opts->pixmap == NULL) return NULL;
@@ -254,17 +273,19 @@ void *draw_thread(void *ptr) {
 
   gdk_window_invalidate_rect(opts->widget->window, NULL, FALSE);
 
+  set_labels(opts);
+
   gdk_threads_leave();
 
   cairo_surface_destroy(cst);
 
-  opts->drawing = FALSE;
+  g_atomic_int_set(&opts->drawing, FALSE);
 
   return NULL;
 }
 
 void animate_move(RendererWidgetOptions *opts, Move m) {
-  opts->drawing = TRUE;
+  g_atomic_int_set(&opts->drawing, TRUE);
   opts->move = m;
   pthread_create(&opts->thread, NULL, draw_thread, opts);
 }
@@ -285,7 +306,7 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
 static gboolean on_renderer_key_press_event(GtkWidget *widget,
     GdkEventKey *event, gpointer data) {
   RendererWidgetOptions *opts = data;
-  if (opts->drawing) return TRUE;
+  if (g_atomic_int_get(&opts->drawing)) return TRUE;
 
   Move m;
 
@@ -381,13 +402,7 @@ static GtkWidget *get_renderer_widget(RendererWidgetOptions *opts) {
   return result;
 }
 
-int main(int argc, char *argv[]) {
-  if (!g_thread_supported()) {
-    g_thread_init(NULL);
-  }
-  gdk_threads_init();
-  gdk_threads_enter();
-
+RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   GError *error = NULL;
   gboolean klein = FALSE;
   gboolean poincare = FALSE;
@@ -397,15 +412,16 @@ int main(int argc, char *argv[]) {
   gboolean noanimation = FALSE;
 
   GOptionContext *context = g_option_context_new(NULL);
+  g_option_context_set_summary(context, RENDERER_SUMMARY);
   GOptionEntry options[] = {
     {"poincare", 'P', 0, G_OPTION_ARG_NONE, &poincare,
         "Poincare Projection", NULL},
     {"klein", 'K', 0, G_OPTION_ARG_NONE, &klein,
-        "Klein Projection", NULL},
+        "Klein Projection (takes precedence)", NULL},
     {"level", 'l', 0, G_OPTION_ARG_FILENAME, &level,
         "Level File", "LEVEL"},
     {"animation", 'A', 0, G_OPTION_ARG_NONE, &animation,
-        "Animate Moves", NULL},
+        "Animate Moves (takes precedence)", NULL},
     {"no-animation", 'N', 0, G_OPTION_ARG_NONE, &noanimation,
         "Don't Animate Moves", NULL},
     { NULL, 0, 0, 0, NULL, NULL, NULL }
@@ -413,6 +429,7 @@ int main(int argc, char *argv[]) {
   g_option_context_add_main_entries(context, options, NULL);
   g_option_context_add_group(context, gtk_get_option_group(TRUE));
   g_option_context_parse(context, &argc, &argv, &error);
+  g_option_context_free(context);
 
   if (klein || !poincare) {
     projection = PROJECTION_KLEIN;
@@ -424,13 +441,13 @@ int main(int argc, char *argv[]) {
 
   if (level == NULL) {
     fprintf(stderr, "Required argument level not specified.\n");
-    return 1;
+    return NULL;
   }
 
   FILE* levelfh = fopen(level, "r");
   if (levelfh == NULL) {
     perror("Could not open level!\n");
-    return 1;
+    return NULL;
   }
 
 
@@ -442,30 +459,60 @@ int main(int argc, char *argv[]) {
 
   if ((map == NULL) || (cfg == NULL)) {
     fprintf(stderr, "Could not succesfully parse %s.\n", level);
-    return 1;
+    return NULL;
   }
 
   Board* board = board_assemble_full(map, cfg);
 
   if (board == NULL) {
     fprintf(stderr, "Could not succesfully create board from %s.\n", level);
-    return 1;
+    return NULL;
   }
 
   RendererWidgetOptions *opts =
       malloc(sizeof(RendererWidgetOptions));
   opts->projection = projection;
   opts->board = board;
-  opts->drawing = FALSE;
+  g_atomic_int_set(&opts->drawing, FALSE);
   opts->animation = animation;
 
+  return opts;
+}
+
+int main(int argc, char *argv[]) {
+  if (!g_thread_supported()) {
+    g_thread_init(NULL);
+  }
+  gdk_threads_init();
+  gdk_threads_enter();
+
+  RendererWidgetOptions *opts = parse_args(argc, argv);
+  if (opts == NULL) return 1;
+
+  GtkWidget *moves = gtk_label_new("Moves : ");
+  GtkWidget *left = gtk_label_new("Boxes Left : ");
+
+  opts->moves_label = GTK_LABEL(moves);
+  opts->boxes_label = GTK_LABEL(left);
+
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+  gtk_window_set_title(GTK_WINDOW(window), RENDERER_TITLE);
+  gtk_container_set_border_width(GTK_CONTAINER(window), RENDERER_BORDER);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit),
       NULL);
 
+  GtkWidget *vbox = gtk_vbox_new(FALSE, RENDERER_BORDER);
+  gtk_container_add(GTK_CONTAINER(window), vbox);
+
   GtkWidget *renderer = get_renderer_widget(opts);
-  gtk_container_add(GTK_CONTAINER(window), renderer);
+  gtk_box_pack_start(GTK_BOX(vbox), renderer, TRUE, TRUE, 0);
+
+  GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
+  gtk_box_pack_end(GTK_BOX(vbox), hbox, FALSE, TRUE, 0);
+
+  gtk_box_pack_start(GTK_BOX(hbox), moves, TRUE, TRUE, 0);
+
+  gtk_box_pack_start(GTK_BOX(hbox), left, TRUE, TRUE, 0);
 
   gtk_widget_show_all(window);
 

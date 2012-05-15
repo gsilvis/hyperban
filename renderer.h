@@ -43,4 +43,12 @@
 
 #define DEFAULT_ANIMATION TRUE
 
+#define RENDERER_TITLE "Hyperban"
+
+#define BOXES_TEXT "Boxes Left: %d"
+
+#define MOVES_TEXT "Moves Taken: %d"
+
+#define RENDERER_SUMMARY "Hyperban hyperbolic sokoban renderer."
+
 #endif /* __HYPERBAN_RENDERER_H */
