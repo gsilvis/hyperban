@@ -219,7 +219,7 @@ static void *draw_thread(void *ptr) {
       opts->move++;
     case 'l': case 'L':
       opts->move++;
-    case 'b': case 'B':
+    case 'd': case 'D':
       opts->move++;
     }
   }
@@ -454,9 +454,9 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     return NULL;
   }
 
-  if (klein || !poincare) {
+  if (klein) {
     projection = PROJECTION_KLEIN;
-  } else {
+  } else if (poincare) {
     projection = PROJECTION_POINCARE;
   }
 

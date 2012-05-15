@@ -36,7 +36,7 @@ enum hyperbolic_projection_t {
   PROJECTION_KLEIN,  PROJECTION_POINCARE
 };
 
-#define DEFAULT_PROJECTION PROJECTION_KLEIN
+#define DEFAULT_PROJECTION PROJECTION_POINCARE
 
 typedef enum hyperbolic_projection_t HyperbolicProjection;
 
