@@ -21,6 +21,8 @@
 #ifndef __HYPERBAN__TYPES_H
 #define __HYPERBAN__TYPES_H
 
+#include <stddef.h>
+
 typedef struct {
   char tile_type;
   char agent;
@@ -73,6 +75,7 @@ typedef struct {
   char *level_title;
   char *collection_title;
   char *moves;
+  size_t moves_length;
   int number_moves;
   /* expand as needed */
 } Board;

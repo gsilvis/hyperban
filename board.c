@@ -111,7 +111,8 @@ Board *board_assemble (Graph *graph, SavedTile *tiles, ConfigOption *options)
 
   /* Set currently run moves to 0 */
   board->number_moves = 0;
-  board->moves = calloc(4, sizeof(char));
+  board->moves_length = 4;
+  board->moves = calloc(board->moves_length, sizeof(char));
 
   /* Figure out the number of unsolved boxes */
   for (int i = 0; tiles[i].path; i++)

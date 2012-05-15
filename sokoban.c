@@ -21,6 +21,40 @@
 #include "sokoban.h"
 #include "types.h"
 #include "graph.h"
+#include <string.h>
+#include <stdlib.h>
+
+char sokoban_get_move_abbreviation (Move move, int is_push)
+{
+  char returnee = 32 * (1 - is_push); 
+  /* If it's a push, we'll make it uppercase */
+  switch (move)
+    {
+    case MOVE_UP:
+      return returnee + 'U';
+    case MOVE_RIGHT:
+      return returnee + 'R';
+    case MOVE_DOWN:
+      return returnee + 'D';
+    case MOVE_LEFT:
+      return returnee + 'L';
+    default:
+      return '?';
+    }
+}
+
+int sokoban_update_board_data (Board *b, Move move, int is_push)
+{
+  char c = sokoban_get_move_abbreviation(move, is_push);
+  if (strlen(b->moves) >= b->moves_length - 1)
+    {
+      b->moves_length *= 2;
+      b->moves = realloc(b->moves, b->moves_length);
+    }
+  strncat(b->moves, &c, 1); /* add a letter to the end */
+  b->number_moves++;
+  return is_push;
+}
 
 int perform_move (Board *b, Move move)
 {
@@ -39,9 +73,8 @@ int perform_move (Board *b, Move move)
   if (new->tile->agent == AGENT_NONE)
     {
       b->graph = new; /* Walk */
-      return RESULT_MOVE;
+      return sokoban_update_board_data(b, move, RESULT_MOVE);
     }
-
 
   /* There's a box, so we need to figure out what's behind it */
 
@@ -68,5 +101,7 @@ int perform_move (Board *b, Move move)
     (b->unsolved)--;
 
   b->graph = new;
-  return RESULT_PUSH; /* Push sucessful */
+  return sokoban_update_board_data(b, move, RESULT_PUSH); /* Push sucessful */
 }
+
+
