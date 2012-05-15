@@ -147,6 +147,11 @@ char unperform_move (Board *b)
 
       bluh->adjacent->tile->agent = AGENT_NONE;
       bluh->tile->agent = AGENT_BOX; /* pull box */
+
+      if (bluh->adjacent->tile->tile_type == TILE_TYPE_TARGET)
+        (b->unsolved)++;
+      if (bluh->tile->tile_type == TILE_TYPE_TARGET)
+        (b->unsolved)--;
     }
   
   /* now step backwards */
