@@ -128,41 +128,13 @@ void render_graph(RendererParams *params, Graph *graph) {
 }
 
 SquarePoints *move_square(SquarePoints *points, Move m) {
-  r3transform trans;
   SquarePoints *next_points = malloc(sizeof(SquarePoints));
-  switch (m) {
-  case MOVE_UP:
-    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
-        points->points[3]));
-    next_points->points[0] = apply_transformation(points->points[2], trans);
-    next_points->points[1] = points->points[0];
-    next_points->points[2] = points->points[3];
-    next_points->points[3] = apply_transformation(points->points[1], trans);
-    break;
-  case MOVE_RIGHT:
-    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[0],
-        points->points[1]));
-    next_points->points[0] = apply_transformation(points->points[2], trans);
-    next_points->points[1] = apply_transformation(points->points[3], trans);
-    next_points->points[2] = points->points[1];
-    next_points->points[3] = points->points[0];
-    break;
-  case MOVE_DOWN:
-    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[1],
-        points->points[2]));
-    next_points->points[0] = points->points[1];
-    next_points->points[1] = apply_transformation(points->points[3], trans);
-    next_points->points[2] = apply_transformation(points->points[0], trans);
-    next_points->points[3] = points->points[2];
-    break;
-  case MOVE_LEFT:
-    trans = hyperbolic_reflection(hyperbolic_midpoint(points->points[2],
-        points->points[3]));
-    next_points->points[0] = points->points[3];
-    next_points->points[1] = points->points[2];
-    next_points->points[2] = apply_transformation(points->points[0], trans);
-    next_points->points[3] = apply_transformation(points->points[1], trans);
-    break;
-  }
+  r3transform trans = hyperbolic_reflection(hyperbolic_midpoint(
+      points->points[m], points->points[(m+3)%4]));
+  next_points->points[m] = apply_transformation(points->points[(m+2)%4],trans);
+  next_points->points[(m+1)%4] = points->points[m];
+  next_points->points[(m+3)%4] = apply_transformation(points->points[(m+1)%4],
+      trans);
+  next_points->points[(m+2)%4] = points->points[(m+3)%4];
   return next_points;
 }

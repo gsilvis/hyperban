@@ -1,0 +1,12 @@
+# George
+
+!startpos: "LF"
+
+0|0|  # You can also put a comment here.
+0|0|F
+0|0|FLF
+0|0|LF
+0|1|BF
+0|0|BFRF
+2|0|BFF
+0|0|BFFRF

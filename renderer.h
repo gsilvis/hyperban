@@ -31,6 +31,8 @@
 
 #define RENDERER_BORDER 10
 
-#define RENDERER_ANIMATION_TIME .5 /* seconds */
+#define RENDERER_ANIMATION_TIME 1.0 /* seconds */
+
+#define RENDERER_MAX_FRAME_RATE 30.0 /* fps */
 
 #endif /* __HYPERBAN_RENDERER_H */

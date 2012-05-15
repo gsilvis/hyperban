@@ -166,7 +166,9 @@ static inline r3vector klein2weierstrass(r3vector a) {
 }
 
 static inline r3vector klein2poincare(r3vector a) {
-  return weierstrass2poincare(klein2weierstrass(a));
+  matrix_el_t d = sqrt(1 - a[0]*a[0] - a[1]*a[1]) + 1.0;
+  r3vector result = {a[0] / d, a[1] / d, 0};
+  return result;
 }
 
 static inline r3vector poincare2klein(r3vector a) {

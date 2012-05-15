@@ -26,6 +26,7 @@
 #include <cairo.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "renderer.h"
 #include "graph.h"
@@ -41,9 +42,10 @@
 #define RENDERER_MIN_HEIGHT 240
 
 inline double get_time() {
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  return now.tv_sec + now.tv_usec * 10E-6;
+  struct timespec now;
+  /* CLOCK_THREAD_CPUTIME_ID so I can compare values (inside a thread) */
+  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
+  return now.tv_sec + now.tv_nsec * 10E-9;
 }
 
 /* Yes, I am aware this should really just extend EventBox */
@@ -62,9 +64,6 @@ typedef struct renderer_widget_options_t RendererWidgetOptions;
 static void draw_tile(RendererParams *params, SquarePoints *points,
     Tile *tile) {
   cairo_t *cr = params->data;
-  cairo_save(cr);
-  cairo_translate(cr, params->origin[0], params->origin[1]);
-  cairo_scale(cr, params->scale, params->scale);
   if (params->projection == PROJECTION_KLEIN) {
     for (size_t i = 0; i < 4; i++) {
       r3vector projected = points->points[i];
@@ -73,8 +72,10 @@ static void draw_tile(RendererParams *params, SquarePoints *points,
     cairo_close_path(cr);
   } else if (params->projection == PROJECTION_POINCARE) {
     r3vector projected[4] = {
-      klein2poincare(points->points[0]), klein2poincare(points->points[1]),
-      klein2poincare(points->points[2]), klein2poincare(points->points[3])
+      klein2poincare(points->points[0]),
+      klein2poincare(points->points[1]),
+      klein2poincare(points->points[2]),
+      klein2poincare(points->points[3])
     };
     r3vector midpoints[4] = {
       klein2poincare(hyperbolic_midpoint(points->points[0], points->points[1])),
@@ -106,7 +107,6 @@ static void draw_tile(RendererParams *params, SquarePoints *points,
   cairo_fill_preserve(cr);
   cairo_set_source_rgb(cr, 0, 0, 0);
   cairo_stroke(cr);
-  cairo_restore(cr);
 }
 
 static void renderer_draw(cairo_t *cr, double width, double height,
@@ -138,13 +138,12 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 
   if (frame != 0) {
     SquarePoints* next = move_square(origin, (m + 2) % 4);
-    r3vector from = hyperbolic_midpoint(
-        hyperbolic_midpoint(origin->points[0], origin->points[1]),
-        hyperbolic_midpoint(origin->points[2], origin->points[3]));
+    r3vector from = {0, 0, 1};
     r3vector to = hyperbolic_midpoint(
         hyperbolic_midpoint(next->points[0], next->points[1]),
         hyperbolic_midpoint(next->points[2], next->points[3]));
-    to = to * const_r3vector(frame) + from * const_r3vector(1-frame);
+    to = to * const_r3vector(frame);
+    to[2] = 1;
     r3transform transformation = hyperbolic_translation(from, to);
     SquarePoints *temp = transform_square(origin, transformation);
     free(origin);
@@ -162,6 +161,9 @@ static void renderer_draw(cairo_t *cr, double width, double height,
   };
 
   cairo_set_line_width(cr, 1/params.scale);
+
+  cairo_translate(cr, params.origin[0], params.origin[1]);
+  cairo_scale(cr, params.scale, params.scale);
 
   render_graph(&params, graph);
 
@@ -188,9 +190,10 @@ void *draw_thread(void *ptr) {
     double start = get_time();
 
     while (TRUE) {
+      double frame_start = get_time();
       cairo_t *cr = cairo_create(cst);
 
-      double frame = (fmin(RENDERER_ANIMATION_TIME, get_time()-start) /
+      double frame = (fmin(RENDERER_ANIMATION_TIME, frame_start-start) /
           RENDERER_ANIMATION_TIME);
 
       renderer_draw(cr, width, height, oldpos,
@@ -205,18 +208,26 @@ void *draw_thread(void *ptr) {
       cairo_paint(cr_win);
       cairo_destroy(cr_win);
 
-      gtk_widget_queue_draw_area(opts->widget, 0, 0, width, height);
+      gdk_window_invalidate_rect(opts->widget->window, NULL, FALSE);
       gdk_threads_leave();
 
-      if (get_time() - start > RENDERER_ANIMATION_TIME) {
+      double frame_end = get_time();
+      if (frame_end - start > RENDERER_ANIMATION_TIME) {
         break;
+      }
+      if (frame_end - frame_start < 1.0/RENDERER_MAX_FRAME_RATE) {
+        double sleeptime = 1.0/RENDERER_MAX_FRAME_RATE -
+            (frame_end - frame_start);
+        struct timespec sleep;
+        sleep.tv_sec = sleeptime;
+        sleep.tv_nsec = fmin(999999999, sleeptime/10E-9);
+        nanosleep(&sleep, NULL);
       }
     }
   }
   cairo_t *cr = cairo_create(cst);
 
-  renderer_draw(cr, width, height,
-      opts->board->graph, opts->projection, 0, 0);
+  renderer_draw(cr, width, height, opts->board->graph, opts->projection, 0, 0);
 
   cairo_destroy(cr);
 
@@ -227,7 +238,7 @@ void *draw_thread(void *ptr) {
   cairo_paint(cr_win);
   cairo_destroy(cr_win);
 
-  gtk_widget_queue_draw_area(opts->widget, 0, 0, width, height);
+  gdk_window_invalidate_rect(opts->widget->window, NULL, FALSE);
 
   gdk_threads_leave();
 
@@ -254,7 +265,7 @@ static gboolean on_renderer_expose_event(GtkWidget *widget,
         event->area.x, event->area.y,
         event->area.width, event->area.height);
   }
-  return TRUE;
+  return FALSE;
 }
 
 static gboolean on_renderer_key_press_event(GtkWidget *widget,
@@ -315,14 +326,14 @@ static gboolean on_renderer_realize(GtkWidget *widget, gpointer data) {
     opts->pixmap = tmp;
     animate_move(opts, -1);
   }
-  return TRUE;
+  return FALSE;
 }
 
 static gboolean on_renderer_size_allocate(GtkWidget *widget,
     GdkRectangle* allocation, gpointer data) {
   if (gtk_widget_get_realized(widget))
     on_renderer_realize(widget, data);
-  return TRUE;
+  return FALSE;
 }
 
 static GtkWidget *get_renderer_widget(RendererWidgetOptions *opts) {
