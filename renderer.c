@@ -475,7 +475,7 @@ RendererWidgetOptions *parse_args(int argc, char *argv[]) {
 
   FILE* levelfh = fopen(level, "r");
   if (levelfh == NULL) {
-    perror("Could not open level!\n");
+    perror("Could not open level");
     return NULL;
   }
 

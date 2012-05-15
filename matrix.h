@@ -145,7 +145,7 @@ static inline r3transform hyperbolic_translation(r3vector a, r3vector b) {
 }
 
 static inline r3vector weierstrass2poincare(r3vector a) {
-  return a / const_r3vector((a[2] + 2));
+  return a / const_r3vector((a[2] + 1));
 }
 
 static inline r3vector poincare2weierstrass(r3vector a) {
