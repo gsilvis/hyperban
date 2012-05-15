@@ -50,6 +50,7 @@ struct renderer_widget_options_t {
   HyperbolicProjection projection;
   Board* board;
   gboolean drawing;
+  gboolean animation;
   pthread_t thread;
   Move move; // simply to ease pasing a pointer to this struct to a thread
   GtkWidget *widget;
@@ -182,8 +183,24 @@ void *draw_thread(void *ptr) {
   cairo_surface_t *cst = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
       width, height);
   Graph* oldpos = opts->board->graph;
-  if (opts->move != -1 &&
-      perform_move(opts->board, opts->move) != RESULT_NO_MOVE_POSSIBLE) {
+  int res = 0;
+  if (opts->move >= 0) {
+    res = (perform_move(opts->board, opts->move) != RESULT_NO_MOVE_POSSIBLE);
+  } else if (opts->move == -2) {
+    res = (unperform_move(opts->board));
+    opts->move = -1;
+    switch(res) {
+    case 'r': case 'R':
+      opts->move++;
+    case 'u': case 'U':
+      opts->move++;
+    case 'l': case 'L':
+      opts->move++;
+    case 'b': case 'B':
+      opts->move++;
+    }
+  }
+  if (res && opts->animation) {
     double start = get_time();
 
     while (TRUE) {
@@ -293,14 +310,8 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
     break;
   }
 
-  if (m == -2) {
-    if (0 == unperform_move(opts->board)) {
-      fprintf(stderr, "Unable to undo!\n");
-    }
-    gdk_window_invalidate_rect(widget->window, NULL, FALSE);
-  } else if (m != -1) {
+  if (m != -1) {
     animate_move(opts, m);
-    gdk_window_invalidate_rect(widget->window, NULL, FALSE);
   }
   return FALSE;
 }
@@ -382,6 +393,8 @@ int main(int argc, char *argv[]) {
   gboolean poincare = FALSE;
   gchar* level = NULL;
   HyperbolicProjection projection = DEFAULT_PROJECTION;
+  gboolean animation = FALSE;
+  gboolean noanimation = FALSE;
 
   GOptionContext *context = g_option_context_new(NULL);
   GOptionEntry options[] = {
@@ -391,6 +404,10 @@ int main(int argc, char *argv[]) {
         "Klein Projection", NULL},
     {"level", 'l', 0, G_OPTION_ARG_FILENAME, &level,
         "Level File", "LEVEL"},
+    {"animation", 'A', 0, G_OPTION_ARG_NONE, &animation,
+        "Animate Moves", NULL},
+    {"no-animation", 'N', 0, G_OPTION_ARG_NONE, &noanimation,
+        "Don't Animate Moves", NULL},
     { NULL, 0, 0, 0, NULL, NULL, NULL }
   };
   g_option_context_add_main_entries(context, options, NULL);
@@ -402,6 +419,8 @@ int main(int argc, char *argv[]) {
   } else {
     projection = PROJECTION_POINCARE;
   }
+
+  animation = (animation || (DEFAULT_ANIMATION && !noanimation));
 
   if (level == NULL) {
     fprintf(stderr, "Required argument level not specified.\n");
@@ -438,6 +457,7 @@ int main(int argc, char *argv[]) {
   opts->projection = projection;
   opts->board = board;
   opts->drawing = FALSE;
+  opts->animation = animation;
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
