@@ -68,8 +68,12 @@ typedef struct graph_t Graph;
 typedef struct {
   Graph* graph;
   int unsolved;
+  int difficulty;
   int level_number;
   char *level_title;
+  char *collection_title;
+  char *moves;
+  int number_moves;
   /* expand as needed */
 } Board;
 

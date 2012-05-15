@@ -69,6 +69,22 @@ int board_process_config (Board *board, ConfigOption *option)
             }
         }
     }
+  else if (!strcmp(option->key, "title"))
+    {
+      if (!(option->value_s))
+        return RETURN_FAILURE;
+      board->level_title = option->value_s;
+    }
+  else if (!strcmp(option->key, "difficulty"))
+    board->difficulty = option->value_i;
+  else if (!strcmp(option->key, "collection"))
+    {
+      if (!(option->value_s))
+        return RETURN_FAILURE;
+      board->collection_title = option->value_s;
+    }
+  else if (!strcmp(option->key, "number"))
+    board->level_number = option->value_i;
   else if (!strcmp(option->key, "debug_print"))
     if (option->value_s)
       fprintf(stderr, "%s\n", option->value_s);
@@ -92,6 +108,11 @@ Board *board_assemble (Graph *graph, SavedTile *tiles, ConfigOption *options)
   
   board->graph = graph;
   board->unsolved = 0;
+
+  /* Set currently run moves to 0 */
+  board->number_moves = 0;
+  board->moves = calloc(4, sizeof(char));
+
   /* Figure out the number of unsolved boxes */
   for (int i = 0; tiles[i].path; i++)
     if ((tiles[i].agent == AGENT_BOX) && (tiles[i].tile_type != TILE_TYPE_TARGET))
