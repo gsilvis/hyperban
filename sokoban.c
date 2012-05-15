@@ -21,6 +21,46 @@
 #include "sokoban.h"
 #include "types.h"
 #include "graph.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+char sokoban_get_move_abbreviation (Move move, int is_push)
+{
+  char returnee = 32 * (1 - is_push); 
+  /* If it's a push, we'll make it uppercase */
+  switch (move)
+    {
+    case MOVE_UP:
+      return returnee + 'U';
+    case MOVE_RIGHT:
+      return returnee + 'R';
+    case MOVE_DOWN:
+      return returnee + 'D';
+    case MOVE_LEFT:
+      return returnee + 'L';
+    default:
+      return '?';
+    }
+}
+
+int sokoban_update_board_data (Board *b, Move move, int is_push)
+{
+  b->number_moves++;
+  if (!(b->moves))
+    return is_push; /* and don't do anything */
+
+  char c = sokoban_get_move_abbreviation(move, is_push);
+
+  if (strlen(b->moves) >= b->moves_length - 1)
+    {
+      b->moves_length *= 2;
+      b->moves = realloc(b->moves, b->moves_length);
+    }
+  strncat(b->moves, &c, 1); /* add a letter to the end */
+
+  return is_push;
+}
 
 int perform_move (Board *b, Move move)
 {
@@ -39,9 +79,8 @@ int perform_move (Board *b, Move move)
   if (new->tile->agent == AGENT_NONE)
     {
       b->graph = new; /* Walk */
-      return RESULT_MOVE;
+      return sokoban_update_board_data(b, move, RESULT_MOVE);
     }
-
 
   /* There's a box, so we need to figure out what's behind it */
 
@@ -68,5 +107,68 @@ int perform_move (Board *b, Move move)
     (b->unsolved)--;
 
   b->graph = new;
-  return RESULT_PUSH; /* Push sucessful */
+  return sokoban_update_board_data(b, move, RESULT_PUSH); /* Push sucessful */
+}
+
+
+
+char unperform_move (Board *b)
+{
+  if (!(b->moves))
+    return '\0'; /* Undoing not set up correctly */
+  if (strlen(b->moves) == 0)
+    return '\0'; /* No moves have been made */
+  char c = b->moves[strlen(b->moves) - 1];
+  b->moves[strlen(b->moves) - 1] = '\0';
+  Graph *bluh = b->graph;
+  switch (c)
+    {
+    case 'L': case 'l':
+      bluh = bluh->rotate_r;
+    case 'D': case 'd':
+      bluh = bluh->rotate_r;
+    case 'R': case 'r':
+      bluh = bluh->rotate_r;
+    case 'U': case 'u':
+      break;
+    default:
+      return '\0'; /* illegal character */
+    }
+
+  /* First we check that we can walk backwards */
+  if (!(bluh->rotate_r->rotate_r->adjacent))
+    return '\0'; /* we can't */
+
+
+  if (c < 'a') /* then it's uppercase */
+    {
+      if (bluh->adjacent->tile->agent != AGENT_BOX)
+        return '\0'; /* There's no box... */
+
+      bluh->adjacent->tile->agent = AGENT_NONE;
+      bluh->tile->agent = AGENT_BOX; /* pull box */
+    }
+  
+  /* now step backwards */
+  b->graph = bluh->rotate_r->rotate_r->adjacent;
+
+  /* and spin until we're facing the right way */
+  /* note that the cases are in the OPPOSITE direction to as above! */
+  switch (c)
+    {
+    case 'R': case 'r':
+      b->graph = b->graph->rotate_r;
+    case 'D': case 'd':
+      b->graph = b->graph->rotate_r;
+    case 'L': case 'l':
+      b->graph = b->graph->rotate_r;
+    case 'U': case 'u':
+      break;
+    }
+
+
+  /* one less move has been done */
+  (b->number_moves)--;
+
+  return c;
 }

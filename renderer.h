@@ -24,10 +24,15 @@
 #include "matrix.h"
 #include "graph.h"
 
+#include <gdk/gdkkeysyms.h>
+
+
+
 #define KEY_UP GDK_KEY_Up
 #define KEY_RIGHT GDK_KEY_Right
 #define KEY_LEFT GDK_KEY_Left
 #define KEY_DOWN GDK_KEY_Down
+#define KEY_UNDO GDK_KEY_BackSpace
 
 #define RENDERER_BORDER 10
 

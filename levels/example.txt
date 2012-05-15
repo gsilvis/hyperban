@@ -6,8 +6,10 @@
 # double-quote-delimited strings.  Spaces are optional and allowed anywhere.
 # Key names are alphanumeric.
 
-!name: "George's Level"
-!difficulty: 9001
+!!title:"George's Level"
+!!number: 10
+!!collection :"The Descent into Hyperbolic Insanity"
+!!difficulty : 9001
 
 # If you have one that you feel is MANDATORY [that is, if we don't know how to
 # parse it, we should fail entirely], then use two bangs, like so:
@@ -24,6 +26,8 @@
 # Each line should be "%d|%d|%s", which is parsed as tile|agent|location
 
 # I'll describe the location scheme better later.
+
+!! startpos : "RF"
 
 0|0|  # You can also put a comment here.
 0|1|F

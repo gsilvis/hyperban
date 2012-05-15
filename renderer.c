@@ -285,13 +285,22 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
   case KEY_RIGHT:
     m = MOVE_RIGHT;
     break;
+  case KEY_UNDO:
+    m = -2;
+    break;
   default:
     m = -1;
     break;
   }
 
-  if (m != -1) {
+  if (m == -2) {
+    if (0 == unperform_move(opts->board)) {
+      fprintf(stderr, "Unable to undo!\n");
+    }
+    gdk_window_invalidate_rect(widget->window, NULL, FALSE);
+  } else if (m != -1) {
     animate_move(opts, m);
+    gdk_window_invalidate_rect(widget->window, NULL, FALSE);
   }
   return FALSE;
 }
