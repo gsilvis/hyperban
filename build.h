@@ -25,6 +25,9 @@
 
 #include "graph.h"
 
+Graph *build_initial_node (void);
+
+int build_add_node (Graph *graph, SavedTile *tile);
 
 Graph *build_graph (SavedTile *tiles);
 

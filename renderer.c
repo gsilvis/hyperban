@@ -172,7 +172,7 @@ static void renderer_draw(cairo_t *cr, double width, double height,
   return;
 }
 
-void set_labels(RendererWidgetOptions *opts) {
+static void set_labels(RendererWidgetOptions *opts) {
   size_t s;
   char *t;
   s = snprintf(NULL, 0, BOXES_TEXT, opts->board->unsolved);
@@ -189,7 +189,7 @@ void set_labels(RendererWidgetOptions *opts) {
 
 }
 
-void *draw_thread(void *ptr) {
+static void *draw_thread(void *ptr) {
   RendererWidgetOptions *opts = ptr;
   if (opts->pixmap == NULL) return NULL;
 
@@ -297,7 +297,7 @@ void *draw_thread(void *ptr) {
   return NULL;
 }
 
-void animate_move(RendererWidgetOptions *opts, Move m) {
+static void animate_move(RendererWidgetOptions *opts, Move m) {
   g_atomic_int_set(&opts->drawing, TRUE);
   opts->move = m;
   pthread_create(&opts->thread, NULL, draw_thread, opts);
@@ -415,7 +415,7 @@ static GtkWidget *get_renderer_widget(RendererWidgetOptions *opts) {
   return result;
 }
 
-RendererWidgetOptions *parse_args(int argc, char *argv[]) {
+static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   GError *error = NULL;
   gboolean klein = FALSE;
   gboolean poincare = FALSE;

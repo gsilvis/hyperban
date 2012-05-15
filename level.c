@@ -25,7 +25,7 @@
 #include <string.h>
 
 
-int level_get_line (FILE *f, char **line_ptr, size_t *size)
+static int level_get_line (FILE *f, char **line_ptr, size_t *size)
 {
   int returnee = getline(line_ptr, size, f);
   if (returnee == -1 || (**line_ptr != '\n' && **line_ptr != LF_COMMENT))
@@ -34,7 +34,7 @@ int level_get_line (FILE *f, char **line_ptr, size_t *size)
     return level_get_line(f, line_ptr, size);
 }
 
-int level_fail (SavedTile *r,
+static int level_fail (SavedTile *r,
                 size_t r_used,
                 ConfigOption *opt,
                 size_t opt_used,

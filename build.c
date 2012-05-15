@@ -22,7 +22,7 @@
 #include "build.h"
 #include <malloc.h>
 
-Graph *build_initial_node ()
+Graph *build_initial_node (void)
 {
   Tile *t = malloc(sizeof(Tile));
 
@@ -41,7 +41,7 @@ Graph *build_initial_node ()
   return first;
 }
 
-void build_enforce_convexity_left (Graph *g)
+static void build_enforce_convexity_left (Graph *g)
 {
   if (!g)
     return; /* Go away */
@@ -81,7 +81,7 @@ void build_enforce_convexity_left (Graph *g)
   build_enforce_convexity_left(clockwise->rotate_r);
 }
 
-void build_enforce_convexity_right (Graph *g)
+static void build_enforce_convexity_right (Graph *g)
 {
   if (!g)
     return; /* Go away */
@@ -125,7 +125,7 @@ void build_enforce_convexity_right (Graph *g)
 }
 
 
-void build_wall_in (Graph *graph)
+static void build_wall_in (Graph *graph)
 {
   for (size_t i = 0; i < 8; i++)
     {

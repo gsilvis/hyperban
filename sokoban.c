@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-char sokoban_get_move_abbreviation (Move move, int is_push)
+static char sokoban_get_move_abbreviation (Move move, int is_push)
 {
   char returnee = 32 * (1 - is_push); 
   /* If it's a push, we'll make it uppercase */
@@ -44,7 +44,7 @@ char sokoban_get_move_abbreviation (Move move, int is_push)
     }
 }
 
-int sokoban_update_board_data (Board *b, Move move, int is_push)
+static int sokoban_update_board_data (Board *b, Move move, int is_push)
 {
   b->number_moves++;
   if (!(b->moves))

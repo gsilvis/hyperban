@@ -31,7 +31,7 @@
 #define RETURN_FAILURE 0
 
 
-int board_process_config (Board *board, ConfigOption *option)
+static int board_process_config (Board *board, ConfigOption *option)
 {
   if (!option)
     return RETURN_FAILURE;
