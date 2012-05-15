@@ -35,4 +35,7 @@
 
 #define RENDERER_MAX_FRAME_RATE 30.0 /* fps */
 
+#define RENDERER_MIN_WIDTH 240
+#define RENDERER_MIN_HEIGHT 240
+
 #endif /* __HYPERBAN_RENDERER_H */

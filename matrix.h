@@ -36,28 +36,30 @@ typedef matrix_el_t
 
 #define _MAT_MULT(mat1, mat2, n, m, l, res) \
   do { \
-    for (size_t _n = 0; _n < n; _n++) { \
-      for (size_t _l = 0; _l < l; _l++) { \
-        (res)[l * _n + _l] = 0; \
-        for (size_t _m = 0; _m < m; _m++) { \
-          (res)[l * _n + _l] += (mat1)[_n * m + _m] * (mat2)[_m * l + _l]; \
+    for (size_t _n = 0; _n < (n); _n++) { \
+      for (size_t _l = 0; _l < (l); _l++) { \
+        (res)[(l)*_n+_l] = 0; \
+        for (size_t _m = 0; _m < (m); _m++) { \
+          (res)[(l) * _n + _l] += (mat1)[_n*(m)+_m] * (mat2)[_m*(l)+_l]; \
         } \
       } \
     } \
   } while (0)
 
 static inline r3vector const_r3vector(matrix_el_t a) {
-  r3vector res = { a, a, a };
-  return res;
+  return (r3vector) { a, a, a };
 }
 
 static inline r3transform const_r3transform(matrix_el_t a) {
-  r3transform res = {
+  return (r3transform) {
     a, a, a,
     a, a, a,
     a, a, a,
   };
-  return res;
+}
+
+static inline matrix_el_t minkowski_self_inner_product(r3vector a) {
+  return a[0] * a[0] + a[1] * a[1] - a[2] * a[2];
 }
 
 static inline matrix_el_t minkowski_inner_product(r3vector a, r3vector b) {
@@ -71,8 +73,7 @@ static inline r3transform outer_product(r3vector a, r3vector b) {
 }
 
 static inline r3vector normalize_r3vector(r3vector a) {
-  r3vector result = { a[0]/a[2], a[1]/a[2], 1 };
-  return result;
+  return a / const_r3vector(a[2]);
 }
 
 static inline r3vector apply_transformation(r3vector a, r3transform b) {
@@ -92,42 +93,42 @@ static inline matrix_el_t hyperbolic_distance(r3vector a, r3vector b) {
   matrix_el_t numerator = minkowski_inner_product(a, b);
   numerator *= numerator;
 
-  matrix_el_t denominator = minkowski_inner_product(a, a);
-  denominator *= minkowski_inner_product(b, b);
+  matrix_el_t denominator = minkowski_self_inner_product(a);
+  denominator *= minkowski_self_inner_product(b);
 
   return 2 * acosh(sqrt(numerator/denominator));
 }
 
 static inline r3transform identity_transform(void) {
-  r3transform result = {
+  return (r3transform) {
     1, 0, 0,
     0, 1, 0,
     0, 0, 1,
   };
-  return result;
 }
 
 static inline r3transform hyperbolic_identity_transform(void) {
-  r3transform result = {
+  return (r3transform) {
     1, 0, 0,
     0, 1, 0,
     0, 0, -1,
   };
-  return result;
 }
 
 static inline r3transform hyperbolic_reflection(r3vector a) {
-  matrix_el_t denom = minkowski_inner_product(a, a);
+  matrix_el_t denom = minkowski_self_inner_product(a);
 
-  r3transform result = multiply_transformations(outer_product(a, a),
-      hyperbolic_identity_transform());
+  r3vector swapped = a;
+  swapped[2] *= -1;
 
-  return identity_transform() - (result * const_r3transform(2.0/denom));
+  swapped *= const_r3vector(2.0/denom);
+
+  return identity_transform() - outer_product(a, swapped);
 }
 
 static inline r3vector hyperbolic_midpoint(r3vector a, r3vector b) {
-  matrix_el_t t1 = minkowski_inner_product(a, a);
-  matrix_el_t t2 = minkowski_inner_product(b, b);
+  matrix_el_t t1 = minkowski_self_inner_product(a);
+  matrix_el_t t2 = minkowski_self_inner_product(b);
   matrix_el_t t3 = minkowski_inner_product(a, b);
 
   matrix_el_t c1 = sqrt(t2 * t3);
@@ -144,31 +145,27 @@ static inline r3transform hyperbolic_translation(r3vector a, r3vector b) {
 }
 
 static inline r3vector weierstrass2poincare(r3vector a) {
-  r3vector result = {a[0] / (a[2] + 1), a[1] / (a[2] + 1), 0};
-  return result;
+  return a / const_r3vector((a[2] + 2));
 }
 
 static inline r3vector poincare2weierstrass(r3vector a) {
   matrix_el_t d = 1.0 / (1 - a[0]*a[0] - a[1]*a[1]);
-  r3vector result = {d*2*a[0], d*2*a[1], d*(1 + a[0] * a[0] + a[1] * a[1])};
-  return result;
+  r3vector result = {2*a[0], 2*a[1], (1 + a[0] * a[0] + a[1] * a[1])};
+  return result * const_r3vector(d);
 }
 
 static inline r3vector weierstrass2klein(r3vector a) {
-  r3vector result = {a[0] / a[2], a[1] / a[2], 1};
-  return result;
+  return normalize_r3vector(a);
 }
 
 static inline r3vector klein2weierstrass(r3vector a) {
-  matrix_el_t d = (1.0 / sqrt(1 - a[0]*a[0] - a[1]*a[1]));
-  r3vector result = {a[0] * d, a[1] * d, d};
-  return result;
+  matrix_el_t d = sqrt(1 - a[0]*a[0] - a[1]*a[1]);
+  return a / const_r3vector(d);
 }
 
 static inline r3vector klein2poincare(r3vector a) {
   matrix_el_t d = sqrt(1 - a[0]*a[0] - a[1]*a[1]) + 1.0;
-  r3vector result = {a[0] / d, a[1] / d, 0};
-  return result;
+  return a / const_r3vector(d);
 }
 
 static inline r3vector poincare2klein(r3vector a) {

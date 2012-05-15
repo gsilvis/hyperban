@@ -127,7 +127,8 @@ void render_graph(RendererParams *params, Graph *graph) {
   }
 }
 
-SquarePoints *move_square(SquarePoints *points, Move m) {
+SquarePoints *move_square(SquarePoints *points, Move move) {
+  size_t m = move;
   SquarePoints *next_points = malloc(sizeof(SquarePoints));
   r3transform trans = hyperbolic_reflection(hyperbolic_midpoint(
       points->points[m], points->points[(m+3)%4]));

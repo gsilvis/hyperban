@@ -38,9 +38,6 @@
 #include "rendering.h"
 #include "cairo_helper.h"
 
-#define RENDERER_MIN_WIDTH 240
-#define RENDERER_MIN_HEIGHT 240
-
 inline double get_time() {
   struct timespec now;
   /* CLOCK_THREAD_CPUTIME_ID so I can compare values (inside a thread) */
