@@ -112,6 +112,9 @@ static void draw_tile(RendererParams *params, SquarePoints *points,
 
 static void renderer_draw(cairo_t *cr, double width, double height,
     Graph* graph, HyperbolicProjection projection, Move m, double frame) {
+  cairo_set_source_rgb(cr, 1, 1, 1);
+  cairo_paint(cr);
+
   cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
   cairo_set_line_width(cr, 2);
 
@@ -242,6 +245,7 @@ void *draw_thread(void *ptr) {
       cairo_paint(cr_win);
       cairo_set_source_surface(cr_win, cst, 0, 0);
       cairo_pattern_set_matrix(cairo_get_source(cr_win), &mat);
+      cairo_pattern_set_filter(cairo_get_source(cr_win), RENDERER_INTERP_MODE);
       cairo_paint(cr_win);
       cairo_destroy(cr_win);
 
@@ -276,6 +280,7 @@ void *draw_thread(void *ptr) {
   cairo_paint(cr_win);
   cairo_set_source_surface(cr_win, cst, 0, 0);
   cairo_pattern_set_matrix(cairo_get_source(cr_win), &mat);
+  cairo_pattern_set_filter(cairo_get_source(cr_win), RENDERER_INTERP_MODE);
   cairo_paint(cr_win);
   cairo_destroy(cr_win);
 

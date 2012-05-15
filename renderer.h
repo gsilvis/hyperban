@@ -25,6 +25,7 @@
 #include "graph.h"
 
 #include <gdk/gdkkeysyms.h>
+#include <cairo.h>
 
 #define KEY_UP GDK_KEY_Up
 #define KEY_RIGHT GDK_KEY_Right
@@ -37,6 +38,8 @@
 #define RENDERER_ANIMATION_TIME 1.0 /* seconds */
 
 #define RENDERER_MAX_FRAME_RATE 30.0 /* fps */
+
+#define RENDERER_INTERP_MODE CAIRO_FILTER_GOOD
 
 #define RENDERER_MIN_WIDTH 240
 #define RENDERER_MIN_HEIGHT 240
