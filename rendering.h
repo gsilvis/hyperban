@@ -55,7 +55,7 @@ SquarePoints *get_origin_square(void);
 
 SquarePoints *move_square(SquarePoints *points, Move m);
 
-SquarePoints *transform_square(SquarePoints *points, r3transform transform);
+SquarePoints *transform_square(SquarePoints *points, r3transform *trans);
 
 void render_graph(RendererParams *params, Graph *graph);
 

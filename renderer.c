@@ -38,7 +38,7 @@
 #include "rendering.h"
 #include "cairo_helper.h"
 
-inline double get_time() {
+static double get_time(void) {
   struct timespec now;
   /* CLOCK_THREAD_CPUTIME_ID so I can compare values (inside a thread) */
   clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
@@ -145,7 +145,7 @@ static void renderer_draw(cairo_t *cr, double width, double height,
     to = to * const_r3vector(frame);
     to[2] = 1;
     r3transform transformation = hyperbolic_translation(from, to);
-    SquarePoints *temp = transform_square(origin, transformation);
+    SquarePoints *temp = transform_square(origin, &transformation);
     free(origin);
     free(next);
     origin = temp;

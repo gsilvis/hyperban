@@ -19,4 +19,4 @@ renderer: $(OFILES)
 	gcc -c -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f $(OFILES) renderer
+	rm -f *.o renderer

@@ -25,6 +25,7 @@
 #include "graph.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define RETURN_SUCCESS 1
 #define RETURN_DONE -1

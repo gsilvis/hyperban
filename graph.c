@@ -20,6 +20,9 @@
 
 #include "graph.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 void clear_dfs(Graph* graph) {
   graph->tile->dfs_use = 0;
   if (graph->adjacent && graph->adjacent->tile->dfs_use) {
@@ -33,5 +36,41 @@ void clear_dfs(Graph* graph) {
   }
   if (ROTATE_L(graph)->adjacent && ROTATE_L(graph)->adjacent->tile->dfs_use) {
     clear_dfs(ROTATE_L(graph)->adjacent);
+  }
+}
+
+void free_graph(Graph *graph) {
+  Graph** all_nodes = NULL;
+  size_t num_nodes = 0;
+  Graph** stack = malloc(sizeof(Graph*));
+  stack[0] = graph;
+  size_t num_stack = 1;
+  while (num_stack) {
+    Graph *g = stack[--num_stack];
+    if (g == NULL) continue;
+    /* if g->tile is NULL, we've already added g (and it's ring) to
+       all_nodes */
+    if (g->tile == NULL) continue;
+    Graph* ring[4] = { g, g->rotate_r, ROTATE_B(g), ROTATE_L(g)};
+    free(graph->tile);
+    for (int i = 0; i < 4; i++) {
+      ring[i]->tile = NULL;
+    }
+    Graph *neighbors[4]= {
+      ring[0]->adjacent,
+      ring[1]->adjacent,
+      ring[2]->adjacent,
+      ring[3]->adjacent
+    };
+    stack = realloc(stack, (num_stack+4) * (sizeof(Graph*)));
+    memcpy(stack+num_stack, &neighbors, 4 * sizeof(Graph*));
+    num_stack += 4;
+
+    all_nodes = realloc(all_nodes, (num_nodes+4) * sizeof(Graph*));
+    memcpy(all_nodes+num_nodes, &ring, 4 * sizeof(Graph*));
+    num_nodes += 4;
+  }
+  for (size_t i = 0; i < num_nodes; i++) {
+    free(all_nodes[i]);
   }
 }

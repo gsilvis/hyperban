@@ -34,14 +34,14 @@ struct graph_queue_t {
 
 typedef struct graph_queue_t GraphQueue;
 
-SquarePoints *transform_square(SquarePoints *square, r3transform trans) {
+SquarePoints *transform_square(SquarePoints *square, r3transform *trans) {
   SquarePoints *result = malloc(sizeof(SquarePoints));
   *result = (SquarePoints) {
     {
-      apply_transformation(square->points[0], trans),
-      apply_transformation(square->points[1], trans),
-      apply_transformation(square->points[2], trans),
-      apply_transformation(square->points[3], trans)
+      apply_transformation(square->points[0], *trans),
+      apply_transformation(square->points[1], *trans),
+      apply_transformation(square->points[2], *trans),
+      apply_transformation(square->points[3], *trans)
     }
   };
   return result;
