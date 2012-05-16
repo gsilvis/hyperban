@@ -31,4 +31,6 @@ int build_add_node (Graph *graph, SavedTile *tile);
 
 Graph *build_graph (SavedTile *tiles);
 
+void build_wall_in (Graph *graph);
+
 #endif /* __HYPERBAN__BUILD_H */

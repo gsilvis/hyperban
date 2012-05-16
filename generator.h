@@ -18,24 +18,25 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "graph.h"
+#ifndef __HYPERBAN_GENERATOR_H
+#define __HYPERBAN_GENERATOR_H
 
-void clear_dfs(Graph* graph) {
-  graph->tile->dfs_use = 0;
-  if (graph->adjacent && graph->adjacent->tile->dfs_use) {
-    clear_dfs(graph->adjacent);
-  }
-  if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->adjacent);
-  }
-  if (ROTATE_B(graph)->adjacent && ROTATE_B(graph)->adjacent->tile->dfs_use) {
-    clear_dfs(ROTATE_B(graph)->adjacent);
-  }
-  if (ROTATE_L(graph)->adjacent && ROTATE_L(graph)->adjacent->tile->dfs_use) {
-    clear_dfs(ROTATE_L(graph)->adjacent);
-  }
-}
+#include "types.h"
 
-void free_graph(Graph *graph) {
-  
-}
+struct generator_params_t {
+  size_t min_size;
+  size_t size_range;
+  size_t max_dead_ends;
+  size_t num_goals;
+};
+
+typedef struct generator_params_t GeneratorParams;
+
+Board *generate_board(const GeneratorParams *params);
+
+#define GENERATOR_DEFAULT_MIN_SIZE 10
+#define GENERATOR_DEFAULT_SIZE_RANGE 5
+#define GENERATOR_DEFAULT_MAX_DEAD_ENDS 0
+#define GENERATOR_DEFAULT_NUM_GOALS 2
+
+#endif /* __HYPERBAN_GENERATOR_H */

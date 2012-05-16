@@ -37,6 +37,7 @@
 #include "board.h"
 #include "rendering.h"
 #include "cairo_helper.h"
+#include "generator.h"
 
 inline double get_time() {
   struct timespec now;
@@ -425,6 +426,7 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   HyperbolicProjection projection = DEFAULT_PROJECTION;
   gboolean animation = FALSE;
   gboolean noanimation = FALSE;
+  gboolean random = FALSE;
 
   GOptionContext *context = g_option_context_new(NULL);
   g_option_context_set_summary(context, RENDERER_SUMMARY);
@@ -432,16 +434,18 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     {"poincare", 'P', 0, G_OPTION_ARG_NONE, &poincare,
         "Poincare Projection", NULL},
     {"klein", 'K', 0, G_OPTION_ARG_NONE, &klein,
-        "Klein Projection (takes precedence)", NULL},
+        "Klein Projection", NULL},
     {"level", 'l', 0, G_OPTION_ARG_FILENAME, &level,
         "Level File", "LEVEL"},
     {"animation", 'A', 0, G_OPTION_ARG_NONE, &animation,
-        "Animate Moves (takes precedence)", NULL},
+        "Animate Moves", NULL},
     {"no-animation", 'N', 0, G_OPTION_ARG_NONE, &noanimation,
         "Don't Animate Moves", NULL},
     {"scale", 'S', 0, G_OPTION_ARG_STRING, &scale_str,
         "Render at a lower resolution (SCALE of 2 means scale"
         " rendered image x2 before displaying)", "SCALE"},
+    {"random", 'R', 0, G_OPTION_ARG_NONE, &random,
+        "Generate random level", NULL},
     { NULL, 0, 0, 0, NULL, NULL, NULL }
   };
   g_option_context_add_main_entries(context, options, NULL);
@@ -454,13 +458,24 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     return NULL;
   }
 
+  if ((klein && poincare) || (animation && noanimation) || (random && level)) {
+    fprintf(stderr, "Mutually exclusive command line options specified!\n");
+    return NULL;
+  }
+
   if (klein) {
     projection = PROJECTION_KLEIN;
   } else if (poincare) {
     projection = PROJECTION_POINCARE;
   }
 
-  animation = (animation || (DEFAULT_ANIMATION && !noanimation));
+  if (noanimation) {
+    animation = FALSE;
+  } else if (animation) {
+    animation = TRUE;
+  } else {
+    animation = DEFAULT_ANIMATION;
+  }
 
   if (scale_str != NULL) {
     if (!sscanf(scale_str, "%lf", &scale)) {
@@ -468,34 +483,36 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     }
   }
 
-  if (level == NULL) {
+  Board *board;
+
+  if (random) {
+    board = generate_board(NULL);
+  } else if (level == NULL) {
     fprintf(stderr, "Required argument level not specified.\n");
     return NULL;
-  }
+  } else {
+    FILE* levelfh = fopen(level, "r");
+    if (levelfh == NULL) {
+      perror("Could not open level");
+      return NULL;
+    }
 
-  FILE* levelfh = fopen(level, "r");
-  if (levelfh == NULL) {
-    perror("Could not open level");
-    return NULL;
-  }
 
+    SavedTile *map = NULL;
+    ConfigOption *cfg = NULL;
+    level_parse_file(levelfh, &map, &cfg);
 
-  SavedTile *map = NULL;
-  ConfigOption *cfg = NULL;
-  level_parse_file(levelfh, &map, &cfg);
+    fclose(levelfh);
 
-  fclose(levelfh);
-
-  if ((map == NULL) || (cfg == NULL)) {
-    fprintf(stderr, "Could not succesfully parse %s.\n", level);
-    return NULL;
-  }
-
-  Board* board = board_assemble_full(map, cfg);
-
-  if (board == NULL) {
-    fprintf(stderr, "Could not succesfully create board from %s.\n", level);
-    return NULL;
+    if ((map == NULL) || (cfg == NULL)) {
+      fprintf(stderr, "Could not succesfully parse %s.\n", level);
+      return NULL;
+    }
+    board = board_assemble_full(map, cfg);
+    if (board == NULL) {
+      fprintf(stderr, "Could not succesfully create board from %s.\n", level);
+      return NULL;
+    }
   }
 
   RendererWidgetOptions *opts =

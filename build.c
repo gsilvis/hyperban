@@ -125,7 +125,7 @@ static void build_enforce_convexity_right (Graph *g)
 }
 
 
-static void build_wall_in (Graph *graph)
+void build_wall_in (Graph *graph)
 {
   for (size_t i = 0; i < 8; i++)
     {
