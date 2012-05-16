@@ -26,12 +26,6 @@
 
 #define RENDERING_MAX_DIST 7
 
-struct square_points_t {
-  r3vector points[4];
-};
-
-typedef struct square_points_t SquarePoints;
-
 enum hyperbolic_projection_t {
   PROJECTION_KLEIN,  PROJECTION_POINCARE
 };
@@ -51,11 +45,7 @@ struct renderer_params_t {
 
 typedef struct renderer_params_t RendererParams;
 
-SquarePoints *get_origin_square(void);
-
 SquarePoints *move_square(SquarePoints *points, Move m);
-
-SquarePoints *transform_square(SquarePoints *points, r3transform *trans);
 
 void render_graph(RendererParams *params, Graph *graph);
 

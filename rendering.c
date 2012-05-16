@@ -22,7 +22,6 @@
 
 #include <stdlib.h>
 
-#include "consts.h"
 #include "graph.h"
 
 struct graph_queue_t {
@@ -33,33 +32,6 @@ struct graph_queue_t {
 };
 
 typedef struct graph_queue_t GraphQueue;
-
-SquarePoints *transform_square(SquarePoints *square, r3transform *trans) {
-  SquarePoints *result = malloc(sizeof(SquarePoints));
-  *result = (SquarePoints) {
-    {
-      apply_transformation(square->points[0], *trans),
-      apply_transformation(square->points[1], *trans),
-      apply_transformation(square->points[2], *trans),
-      apply_transformation(square->points[3], *trans)
-    }
-  };
-  return result;
-}
-
-/* returns points in clockwise order */
-SquarePoints *get_origin_square(void) {
-  SquarePoints *res = malloc(sizeof(SquarePoints));
-  *res = (SquarePoints) {
-    {
-      { MORE_MAGIC, -MORE_MAGIC, 1},
-      { MORE_MAGIC,  MORE_MAGIC, 1},
-      {-MORE_MAGIC,  MORE_MAGIC, 1},
-      {-MORE_MAGIC, -MORE_MAGIC, 1}
-    }
-  };
-  return res;
-}
 
 static void add_queue(GraphQueue **queue, GraphQueue **queue_end,
     Graph *graph, SquarePoints* points, size_t dist) {
