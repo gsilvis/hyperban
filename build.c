@@ -31,14 +31,18 @@ Graph *build_initial_node (void)
   t->agent = AGENT_DEFAULT;
   t->dfs_use = 0;
 
-  Graph *first = malloc(4 * sizeof(Graph));
+  Graph *nodes[4];
   for (size_t i = 0; i < 4; i++)
     {
-      first[i].tile = t;
-      first[i].rotate_r = first + ((i + 1) % 4);
-      first[i].adjacent = NULL;
+      nodes[i] = malloc(sizeof(Graph));
     }
-  return first;
+  for (size_t i = 0; i < 4; i++)
+    {
+      nodes[i]->tile = t;
+      nodes[i]->rotate_r = nodes[(i + 1) % 4];
+      nodes[i]->adjacent = NULL;
+    }
+  return nodes[0];
 }
 
 static void build_enforce_convexity_left (Graph *g)

@@ -28,4 +28,6 @@
 
 void clear_dfs(Graph* graph);
 
+void free_graph(Graph *graph);
+
 #endif /* __HYPERBAN__GRAPH_H */
