@@ -448,7 +448,7 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   g_option_context_free(context);
 
   if (random) {
-    if (!res || levels == NULL || levels[0] != NULL) {
+    if (!res) {
       fprintf(stderr, "Invalid command line options!\n");
       return NULL;
     }
@@ -465,7 +465,7 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     return NULL;
   }
 
-  level = levels[0];
+
 
   if (klein) {
     projection = PROJECTION_KLEIN;
@@ -491,10 +491,8 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
 
   if (random) {
     board = generate_board(NULL);
-  } else if (level == NULL) {
-    fprintf(stderr, "Required argument level not specified.\n");
-    return NULL;
   } else {
+    level = levels[0];
     FILE* levelfh = fopen(level, "r");
     if (levelfh == NULL) {
       perror("Could not open level");
