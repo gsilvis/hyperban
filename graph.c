@@ -52,7 +52,7 @@ void free_graph(Graph *graph) {
        all_nodes */
     if (g->tile == NULL) continue;
     Graph* ring[4] = { g, g->rotate_r, ROTATE_B(g), ROTATE_L(g)};
-    free(graph->tile);
+    free(g->tile);
     for (int i = 0; i < 4; i++) {
       ring[i]->tile = NULL;
     }

@@ -25,5 +25,6 @@
 
 Board *board_assemble (Graph *graph, SavedTile *tiles, ConfigOption *options);
 Board *board_assemble_full (SavedTile *tiles, ConfigOption *options);
+void free_board (Board *b);
 
 #endif /* __HYPERBAN__BOARD_H */

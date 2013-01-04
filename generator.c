@@ -102,6 +102,7 @@ static Graph *generate_room(const GeneratorParams *params) {
 
   free(floors);
   if (dead_ends > params->max_dead_ends) {
+    free_graph(start);
     return generate_room(params);
   } else {
    return start;

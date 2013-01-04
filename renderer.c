@@ -52,7 +52,6 @@ struct renderer_widget_options_t {
   gboolean drawing;
   gboolean animation;
   double scale;
-  GThread *thread;
   Move move; // simply to ease pasing a pointer to this struct to a thread
   GtkWidget *widget;
   GdkPixmap *pixmap;
@@ -61,6 +60,14 @@ struct renderer_widget_options_t {
 };
 
 typedef struct renderer_widget_options_t RendererWidgetOptions;
+
+static void free_renderer_options(RendererWidgetOptions *o) {
+  if (o->board)
+    free_board(o->board);
+  if (o->pixmap)
+    g_object_unref(o->pixmap);
+  free(o);
+}
 
 static void draw_tile(RendererParams *params, SquarePoints *points,
     Tile *tile) {
@@ -294,7 +301,7 @@ static gpointer draw_thread(gpointer ptr) {
 static void animate_move(RendererWidgetOptions *opts, Move m) {
   g_atomic_int_set(&opts->drawing, TRUE);
   opts->move = m;
-  opts->thread = g_thread_new("draw thread", draw_thread, opts);
+  g_thread_unref(g_thread_new("draw thread", draw_thread, opts));
 }
 
 static gboolean on_renderer_expose_event(GtkWidget *widget,
@@ -485,6 +492,7 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     if (!sscanf(scale_str, "%lf", &scale)) {
       fprintf(stderr, "Could not parse scale!\n");
     }
+    g_free(scale_str);
   }
 
   Board *board;
@@ -515,7 +523,12 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
       fprintf(stderr, "Could not succesfully create board from %s.\n", level);
       return NULL;
     }
+    free(map);
+    free(cfg);
   }
+
+  if (levels)
+    g_strfreev(levels);
 
   RendererWidgetOptions *opts =
       malloc(sizeof(RendererWidgetOptions));
@@ -565,6 +578,8 @@ int main(int argc, char *argv[]) {
   gtk_widget_grab_focus(renderer);
 
   gtk_main();
+
+  free_renderer_options(opts);
   gdk_threads_leave();
 
   return 0;
