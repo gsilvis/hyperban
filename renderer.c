@@ -176,13 +176,13 @@ static void set_labels(RendererWidgetOptions *opts) {
   size_t s;
   char *t;
   s = snprintf(NULL, 0, BOXES_TEXT, opts->board->unsolved);
-  t = malloc(sizeof(char)*s);
+  t = malloc(sizeof(char)*(s+1));
   sprintf(t, BOXES_TEXT, opts->board->unsolved);
   gtk_label_set_text(opts->boxes_label, t);
   free(t);
 
   s = snprintf(NULL, 0, MOVES_TEXT, opts->board->number_moves);
-  t = malloc(sizeof(char)*s);
+  t = malloc(sizeof(char)*(s+1));
   sprintf(t, MOVES_TEXT, opts->board->number_moves);
   gtk_label_set_text(opts->moves_label, t);
   free(t);
@@ -510,9 +510,6 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  if (!g_thread_supported()) {
-    g_thread_init(NULL);
-  }
   gdk_threads_init();
   gdk_threads_enter();
 
