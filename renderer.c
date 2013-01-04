@@ -24,7 +24,6 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
 #include <cairo.h>
-#include <pthread.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -52,7 +51,7 @@ struct renderer_widget_options_t {
   gboolean drawing;
   gboolean animation;
   double scale;
-  pthread_t thread;
+  GThread *thread;
   Move move; // simply to ease pasing a pointer to this struct to a thread
   GtkWidget *widget;
   GdkPixmap *pixmap;
@@ -173,23 +172,17 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 }
 
 static void set_labels(RendererWidgetOptions *opts) {
-  size_t s;
   char *t;
-  s = snprintf(NULL, 0, BOXES_TEXT, opts->board->unsolved);
-  t = malloc(sizeof(char)*(s+1));
-  sprintf(t, BOXES_TEXT, opts->board->unsolved);
+  t = g_strdup_printf(BOXES_TEXT, opts->board->unsolved);
   gtk_label_set_text(opts->boxes_label, t);
-  free(t);
+  g_free(t);
 
-  s = snprintf(NULL, 0, MOVES_TEXT, opts->board->number_moves);
-  t = malloc(sizeof(char)*(s+1));
-  sprintf(t, MOVES_TEXT, opts->board->number_moves);
+  t = g_strdup_printf(MOVES_TEXT, opts->board->number_moves);
   gtk_label_set_text(opts->moves_label, t);
-  free(t);
-
+  g_free(t);
 }
 
-static void *draw_thread(void *ptr) {
+static gpointer draw_thread(gpointer ptr) {
   RendererWidgetOptions *opts = ptr;
   if (opts->pixmap == NULL) return NULL;
 
@@ -300,7 +293,7 @@ static void *draw_thread(void *ptr) {
 static void animate_move(RendererWidgetOptions *opts, Move m) {
   g_atomic_int_set(&opts->drawing, TRUE);
   opts->move = m;
-  pthread_create(&opts->thread, NULL, draw_thread, opts);
+  opts->thread = g_thread_new("draw thread", draw_thread, opts);
 }
 
 static gboolean on_renderer_expose_event(GtkWidget *widget,
@@ -419,7 +412,8 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   GError *error = NULL;
   gboolean klein = FALSE;
   gboolean poincare = FALSE;
-  gchar* level = NULL;
+  gchar** levels = NULL;
+  gchar *level = NULL;
   double scale = 1;
   gchar* scale_str = NULL;
   HyperbolicProjection projection = DEFAULT_PROJECTION;
@@ -433,8 +427,6 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
         "Poincare Projection", NULL},
     {"klein", 'K', 0, G_OPTION_ARG_NONE, &klein,
         "Klein Projection (takes precedence)", NULL},
-    {"level", 'l', 0, G_OPTION_ARG_FILENAME, &level,
-        "Level File", "LEVEL"},
     {"animation", 'A', 0, G_OPTION_ARG_NONE, &animation,
         "Animate Moves (takes precedence)", NULL},
     {"no-animation", 'N', 0, G_OPTION_ARG_NONE, &noanimation,
@@ -442,6 +434,8 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     {"scale", 'S', 0, G_OPTION_ARG_STRING, &scale_str,
         "Render at a lower resolution (SCALE of 2 means scale"
         " rendered image x2 before displaying)", "SCALE"},
+    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &levels,
+        "Level File", "LEVEL"},
     { NULL, 0, 0, 0, NULL, NULL, NULL }
   };
   g_option_context_add_main_entries(context, options, NULL);
@@ -449,10 +443,12 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   gboolean res = g_option_context_parse(context, &argc, &argv, &error);
   g_option_context_free(context);
 
-  if (!res) {
+  if (!res || levels == NULL || levels[0] == NULL || levels[1] != NULL) {
     fprintf(stderr, "Invalid command line options!\n");
     return NULL;
   }
+
+  level = levels[0];
 
   if (klein) {
     projection = PROJECTION_KLEIN;
@@ -468,17 +464,11 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     }
   }
 
-  if (level == NULL) {
-    fprintf(stderr, "Required argument level not specified.\n");
-    return NULL;
-  }
-
   FILE* levelfh = fopen(level, "r");
   if (levelfh == NULL) {
     perror("Could not open level");
     return NULL;
   }
-
 
   SavedTile *map = NULL;
   ConfigOption *cfg = NULL;
