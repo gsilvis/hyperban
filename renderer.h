@@ -21,9 +21,6 @@
 #ifndef __HYPERBAN_RENDERER_H
 #define __HYPERBAN_RENDERER_H
 
-#include "matrix.h"
-#include "graph.h"
-
 #include <gdk/gdkkeysyms.h>
 #include <cairo.h>
 

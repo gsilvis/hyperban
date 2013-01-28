@@ -28,15 +28,15 @@
 #include <time.h>
 
 #include "renderer.h"
-#include "graph.h"
-#include "matrix.h"
-#include "level.h"
-#include "build.h"
-#include "sokoban.h"
-#include "board.h"
-#include "rendering.h"
-#include "cairo_helper.h"
-#include "generator.h"
+#include "graph/graph.h"
+#include "gui/matrix.h"
+#include "graph/level.h"
+#include "graph/build.h"
+#include "graph/sokoban.h"
+#include "graph/board.h"
+#include "gui/rendering.h"
+#include "gui/cairo_helper.h"
+#include "graph/generator.h"
 
 static double get_time(void) {
   struct timespec now;

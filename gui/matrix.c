@@ -24,7 +24,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "consts.h"
+#include "../graph/consts.h"
 
 // n = rows in mat1/res, m = cols in mat1/rows in mat2, l = cols in mat2/res
 

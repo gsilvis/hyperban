@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 
-#include "graph.h"
+#include "../graph/graph.h"
 
 struct graph_queue_t {
   Graph* val;
