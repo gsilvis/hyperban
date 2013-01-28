@@ -92,7 +92,7 @@ int perform_move (Board *b, Move move)
   if (behind->tile->tile_type == TILE_TYPE_WALL)
     return RESULT_NO_MOVE_POSSIBLE; /* Push blocked by wall. */
 
-  if (behind->tile->tile_type == AGENT_BOX)
+  if (behind->tile->agent == AGENT_BOX)
     return RESULT_NO_MOVE_POSSIBLE; /* Push blocked by box. */
 
   /* There's nothing behind the box, so the box moves */
