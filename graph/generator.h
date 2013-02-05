@@ -18,37 +18,25 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __HYPERBAN_RENDERER_H
-#define __HYPERBAN_RENDERER_H
+#ifndef __HYPERBAN_GENERATOR_H
+#define __HYPERBAN_GENERATOR_H
 
-#include <gdk/gdkkeysyms.h>
-#include <cairo.h>
+#include "types.h"
 
-#define KEY_UP GDK_KEY_Up
-#define KEY_RIGHT GDK_KEY_Right
-#define KEY_LEFT GDK_KEY_Left
-#define KEY_DOWN GDK_KEY_Down
-#define KEY_UNDO GDK_KEY_BackSpace
+struct generator_params_t {
+  size_t min_size;
+  size_t size_range;
+  size_t max_dead_ends;
+  size_t num_goals;
+};
 
-#define RENDERER_BORDER 10
+typedef struct generator_params_t GeneratorParams;
 
-#define RENDERER_ANIMATION_TIME 1.0 /* seconds */
+Board *generate_board(const GeneratorParams *params);
 
-#define RENDERER_MAX_FRAME_RATE 30.0 /* fps */
+#define GENERATOR_DEFAULT_MIN_SIZE 10
+#define GENERATOR_DEFAULT_SIZE_RANGE 5
+#define GENERATOR_DEFAULT_MAX_DEAD_ENDS 0
+#define GENERATOR_DEFAULT_NUM_GOALS 2
 
-#define RENDERER_INTERP_MODE CAIRO_FILTER_GOOD
-
-#define RENDERER_MIN_WIDTH 240
-#define RENDERER_MIN_HEIGHT 240
-
-#define DEFAULT_ANIMATION TRUE
-
-#define RENDERER_TITLE "Hyperban"
-
-#define BOXES_TEXT "Boxes Left: %d"
-
-#define MOVES_TEXT "Moves Taken: %d"
-
-#define RENDERER_SUMMARY "Hyperban hyperbolic sokoban renderer."
-
-#endif /* __HYPERBAN_RENDERER_H */
+#endif /* __HYPERBAN_GENERATOR_H */

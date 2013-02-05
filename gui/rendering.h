@@ -21,7 +21,7 @@
 #ifndef __HYPERBAN_RENDERING_H
 #define __HYPERBAN_RENDERING_H
 
-#include "types.h"
+#include "../graph/types.h"
 #include "matrix.h"
 
 #define RENDERING_MAX_DIST 7

@@ -1,0 +1,11 @@
+=== Hyperban ===
+
+Hyberban is an implementation of sokoban on the hyperbolic plane. It 
+uses squares with five to each corner.
+
+It is in need of new levels.
+
+Run with -h for help.
+
+Hyperban is licensed under the GPL2+. See a license header in a C file 
+and the file COPYING for details.

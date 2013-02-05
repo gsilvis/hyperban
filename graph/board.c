@@ -97,8 +97,6 @@ static int board_process_config (Board *board, ConfigOption *option)
   else /* string unrecognized: return SUCCESS if not mandatory, FAILURE if
           mandatory. */
     return !(option->mandatory);
-  
-
 
   return RETURN_SUCCESS;
 }
@@ -153,4 +151,15 @@ Board *board_assemble_full (SavedTile *tiles, ConfigOption *options)
   return board;
 }
 
-
+void free_board (Board *b)
+{
+  if (b->graph)
+    free_graph(b->graph);
+  if (b->moves)
+    free(b->moves);
+  if (b->level_title)
+    free(b->level_title);
+  if (b->collection_title)
+    free(b->collection_title);
+  free(b);
+}

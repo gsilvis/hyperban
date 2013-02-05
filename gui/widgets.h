@@ -18,17 +18,33 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __HYPERBAN__BUILD_H
-#define __HYPERBAN__BUILD_H
+#ifndef __HYPERBAN_WIDGETS_H
+#define __HYPERBAN_WIDGETS_H
 
-#include <stddef.h>
+#include <gtk/gtk.h>
 
-#include "graph.h"
+#include "./rendering.h"
+#include "../graph/build.h"
+#include "../graph/types.h"
 
-Graph *build_initial_node (void);
+/* Yes, I am aware this should really just extend EventBox */
+struct renderer_widget_options_t {
+  HyperbolicProjection projection;
+  Board* board;
+  gboolean drawing;
+  gboolean animation;
+  double scale;
+  Move move; // simply to ease pasing a pointer to this struct to a thread
+  GtkWidget *widget;
+  GdkPixmap *pixmap;
+  GtkLabel *moves_label;
+  GtkLabel *boxes_label;
+};
 
-int build_add_node (Graph *graph, SavedTile *tile);
+typedef struct renderer_widget_options_t RendererWidgetOptions;
 
-Graph *build_graph (SavedTile *tiles);
+void free_renderer_options(RendererWidgetOptions *o);
 
-#endif /* __HYPERBAN__BUILD_H */
+GtkWidget *get_renderer_widget(RendererWidgetOptions *opts);
+
+#endif /* __HYPERBAN_WIDGETS_H */

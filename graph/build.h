@@ -18,12 +18,19 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __HYPERBAN__BOARD_H
-#define __HYPERBAN__BOARD_H
+#ifndef __HYPERBAN__BUILD_H
+#define __HYPERBAN__BUILD_H
 
-#include "types.h"
+#include <stddef.h>
 
-Board *board_assemble (Graph *graph, SavedTile *tiles, ConfigOption *options);
-Board *board_assemble_full (SavedTile *tiles, ConfigOption *options);
+#include "graph.h"
 
-#endif /* __HYPERBAN__BOARD_H */
+Graph *build_initial_node (void);
+
+int build_add_node (Graph *graph, SavedTile *tile);
+
+Graph *build_graph (SavedTile *tiles);
+
+void build_wall_in (Graph *graph);
+
+#endif /* __HYPERBAN__BUILD_H */
