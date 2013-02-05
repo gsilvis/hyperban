@@ -29,21 +29,27 @@ typedef struct {
   char dfs_use;
 } Tile;
 
-#define TILE_TYPE_SPACE 0
-#define TILE_TYPE_WALL 1
-#define TILE_TYPE_TARGET 2
-#define TILE_TYPE_DEFAULT TILE_TYPE_WALL
+enum {
+  TILE_TYPE_SPACE = 0,
+  TILE_TYPE_WALL = 1,
+  TILE_TYPE_TARGET = 2,
+  TILE_TYPE_DEFAULT = TILE_TYPE_WALL,
+};
 
-#define AGENT_NONE 0
-#define AGENT_BOX 1
-#define AGENT_DEFAULT AGENT_NONE
+enum {
+  AGENT_NONE = 0,
+  AGENT_BOX = 1,
+  AGENT_DEFAULT = AGENT_NONE,
+};
 
 typedef char Move;
 
-#define MOVE_UP 0
-#define MOVE_RIGHT 1
-#define MOVE_DOWN 2
-#define MOVE_LEFT 3
+enum {
+  MOVE_UP = 0,
+  MOVE_RIGHT = 1,
+  MOVE_DOWN = 2,
+  MOVE_LEFT = 3,
+};
 
 typedef struct {
   char *path;
