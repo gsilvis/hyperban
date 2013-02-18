@@ -31,7 +31,6 @@
 #define RETURN_DONE -1
 #define RETURN_FAILURE 0
 
-
 static int board_process_config (Board *board, ConfigOption *option)
 {
   if (!option)
@@ -104,7 +103,7 @@ static int board_process_config (Board *board, ConfigOption *option)
 Board *board_assemble (Graph *graph, SavedTile *tiles, ConfigOption *options)
 {
   Board *board = calloc(1, sizeof(Board));
-  
+
   board->graph = graph;
   board->unsolved = 0;
 

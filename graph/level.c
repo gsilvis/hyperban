@@ -34,26 +34,6 @@ static int level_get_line (FILE *f, char **line_ptr, size_t *size)
     return level_get_line(f, line_ptr, size);
 }
 
-static int level_fail (SavedTile *r,
-                size_t r_used,
-                ConfigOption *opt,
-                size_t opt_used,
-                char *l)
-{
-  for (size_t i = 0; i < r_used; i++)
-    free(r[i].path);
-  free(r);
-  for (size_t i = 0; i < opt_used; i++)
-    {
-      free(opt[i].key);
-      free(opt[i].value_s);
-    }
-  free(opt);
-  free(l);
-
-  return -1;
-}
-
 int level_parse_file (FILE *f,
                       SavedTile **tiles,
                       ConfigOption **options)
@@ -76,8 +56,8 @@ int level_parse_file (FILE *f,
       options == NULL ||
       r == NULL ||
       opt == NULL)
-    return level_fail(r, r_used, opt, opt_used, line_ptr);
- 
+    goto LEVEL_FAIL;
+
   while (level_get_line(f, &line_ptr, &size) != -1)
     {
       if (line_ptr[0] == '\0')
@@ -109,8 +89,8 @@ int level_parse_file (FILE *f,
                            " %m[a-zA-Z0-9_] : \"%m[^\"]\"",
                            &(opt[opt_used].key),
                            &(opt[opt_used].value_s))))
-            return level_fail(r, r_used, opt, opt_used, line_ptr);
-          
+            goto LEVEL_FAIL;
+
           opt_used++;
           if (opt_used >= opt_size)
             {
@@ -127,7 +107,7 @@ int level_parse_file (FILE *f,
                      &(r[r_used].tile_type),
                      &(r[r_used].agent),
                      &(r[r_used].path)) < 2)
-            return level_fail(r, r_used, opt, opt_used, line_ptr);
+            goto LEVEL_FAIL;
 
           if (!(r[r_used].path))
             {
@@ -158,5 +138,19 @@ int level_parse_file (FILE *f,
 
   free(line_ptr);
   return 0; /* Success */
+
+LEVEL_FAIL:
+  for (size_t i = 0; i < r_used; i++)
+    free(r[i].path);
+  free(r);
+  for (size_t i = 0; i < opt_used; i++)
+    {
+      free(opt[i].key);
+      free(opt[i].value_s);
+    }
+  free(opt);
+  free(line_ptr);
+
+  return -1;
 }
 

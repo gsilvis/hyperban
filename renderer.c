@@ -34,6 +34,7 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   GError *error = NULL;
   gboolean klein = FALSE;
   gboolean poincare = FALSE;
+  gboolean editing = FALSE;
   gchar** levels = NULL;
   gchar *level = NULL;
   double scale = 1;
@@ -59,6 +60,8 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
         " rendered image x2 before displaying)", "SCALE"},
     {"random", 'R', 0, G_OPTION_ARG_NONE, &random,
         "Generate random level", NULL},
+    {"editing", 'E', 0, G_OPTION_ARG_NONE, &editing,
+        "Editing mode", NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &levels,
         "Level File", "LEVEL"},
     { NULL, 0, 0, 0, NULL, NULL, NULL }
@@ -71,22 +74,19 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   if (random) {
     if (!res) {
       fprintf(stderr, "Invalid command line options!\n");
-      return NULL;
+      goto FAIL;
     }
   } else { /* !random */
     if (!res || levels == NULL || levels[0] == NULL || levels[1] != NULL) {
       fprintf(stderr, "Invalid command line options!\n");
-      return NULL;
+      goto FAIL;
     }
   }
 
-
   if ((klein && poincare) || (animation && noanimation) || (random && level)) {
     fprintf(stderr, "Mutually exclusive command line options specified!\n");
-    return NULL;
+    goto FAIL;
   }
-
-
 
   if (klein) {
     projection = PROJECTION_KLEIN;
@@ -106,7 +106,6 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     if (!sscanf(scale_str, "%lf", &scale)) {
       fprintf(stderr, "Could not parse scale!\n");
     }
-    g_free(scale_str);
   }
 
   Board *board;
@@ -118,9 +117,8 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
     FILE* levelfh = fopen(level, "r");
     if (levelfh == NULL) {
       perror("Could not open level");
-      return NULL;
+      goto FAIL;
     }
-
 
     SavedTile *map = NULL;
     ConfigOption *cfg = NULL;
@@ -130,19 +128,23 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
 
     if ((map == NULL) || (cfg == NULL)) {
       fprintf(stderr, "Could not succesfully parse %s.\n", level);
-      return NULL;
+      free(map);
+      free(cfg);
+      goto FAIL;
     }
     board = board_assemble_full(map, cfg);
-    if (board == NULL) {
-      fprintf(stderr, "Could not succesfully create board from %s.\n", level);
-      return NULL;
-    }
     free(map);
     free(cfg);
+    if (board == NULL) {
+      fprintf(stderr, "Could not succesfully create board from %s.\n", level);
+      goto FAIL;
+    }
   }
 
   if (levels)
     g_strfreev(levels);
+  if (scale_str)
+    g_free(scale_str);
 
   RendererWidgetOptions *opts =
       malloc(sizeof(RendererWidgetOptions));
@@ -150,9 +152,16 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   opts->board = board;
   g_atomic_int_set(&opts->drawing, FALSE);
   opts->animation = animation;
+  opts->editing = editing;
   opts->scale = scale;
 
   return opts;
+FAIL:
+  if (levels)
+    g_strfreev(levels);
+  if (scale_str)
+    g_free(scale_str);
+  return NULL;
 }
 
 int main(int argc, char *argv[]) {

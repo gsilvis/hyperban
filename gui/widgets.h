@@ -33,6 +33,7 @@ struct renderer_widget_options_t {
   Board* board;
   gboolean drawing;
   gboolean animation;
+  gboolean editing;
   double scale;
   Move move; // simply to ease pasing a pointer to this struct to a thread
   GtkWidget *widget;

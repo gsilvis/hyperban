@@ -30,6 +30,15 @@
 #define KEY_DOWN GDK_KEY_Down
 #define KEY_UNDO GDK_KEY_BackSpace
 
+/* Editing Keys */
+#define KEY_MAKE_FLOOR GDK_KEY_f
+#define KEY_MAKE_WALL GDK_KEY_w
+#define KEY_MAKE_BOX GDK_KEY_b
+#define KEY_MAKE_TARGET GDK_KEY_t
+#define KEY_DELETE_ACTOR GDK_KEY_d
+#define KEY_ROT_LEFT GDK_KEY_comma
+#define KEY_ROT_RIGHT GDK_KEY_period
+
 #define RENDERER_BORDER 10
 
 #define RENDERER_ANIMATION_TIME 1.0 /* seconds */

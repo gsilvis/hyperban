@@ -306,7 +306,7 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
   RendererWidgetOptions *opts = data;
   if (g_atomic_int_get(&opts->drawing)) return TRUE;
 
-  Move m;
+  Move m = -1;
 
   switch(event->keyval) {
   case KEY_UP:
@@ -322,16 +322,33 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
     m = MOVE_RIGHT;
     break;
   case KEY_UNDO:
-    m = -2;
+    if (!opts->editing)
+      m = -2;
+    break;
+  case KEY_MAKE_FLOOR:
+    if (opts->editing) {
+      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_SPACE;
+      build_wall_in(opts->board->graph->adjacent);
+    }
+    break;
+  case KEY_MAKE_WALL:
+    if (opts->editing) {
+      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_WALL;
+    }
+    break;
+  case KEY_ROT_LEFT:
+    if (opts->editing)
+      opts->board->graph = ROTATE_L(opts->board->graph);
+    break;
+  case KEY_ROT_RIGHT:
+    if (opts->editing)
+      opts->board->graph = opts->board->graph->rotate_r;
     break;
   default:
-    m = -1;
-    break;
+    return FALSE;
   }
 
-  if (m != -1) {
-    animate_move(opts, m);
-  }
+  animate_move(opts, m);
   return FALSE;
 }
 
