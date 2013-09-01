@@ -64,7 +64,7 @@ void render_graph(RendererParams *params, Graph *graph) {
     free(queue);
     queue = n;
 
-    current->tile->dfs_use = 1;
+    current->tile->search_flag = 1;
 
     params->draw_tile(params, points, current->tile);
 
@@ -73,25 +73,25 @@ void render_graph(RendererParams *params, Graph *graph) {
       continue;
     }
 
-    if (current->adjacent && !current->adjacent->tile->dfs_use) {
+    if (current->adjacent && !current->adjacent->tile->search_flag) {
       add_queue(&queue, &queue_end, ROTATE_B(current->adjacent),
           move_square(points, MOVE_UP), d+1);
     }
 
     if (current->rotate_r->adjacent &&
-        !current->rotate_r->adjacent->tile->dfs_use) {
+        !current->rotate_r->adjacent->tile->search_flag) {
       add_queue(&queue, &queue_end, current->rotate_r->adjacent->rotate_r,
           move_square(points, MOVE_RIGHT), d+1);
     }
 
     if (ROTATE_B(current)->adjacent &&
-        !ROTATE_B(current)->adjacent->tile->dfs_use) {
+        !ROTATE_B(current)->adjacent->tile->search_flag) {
       add_queue(&queue, &queue_end, ROTATE_B(current)->adjacent,
           move_square(points, MOVE_DOWN), d+1);
     }
 
     if (ROTATE_L(current)->adjacent &&
-        !ROTATE_L(current)->adjacent->tile->dfs_use) {
+        !ROTATE_L(current)->adjacent->tile->search_flag) {
       add_queue(&queue, &queue_end, ROTATE_L(ROTATE_L(current)->adjacent),
           move_square(points, MOVE_LEFT), d+1);
     }

@@ -39,7 +39,7 @@ static Graph *generate_room(const GeneratorParams *params) {
   size_t num_walls = 1;
   Graph **walls = malloc(sizeof(Graph *));
   walls[0] = start;
-  start->tile->dfs_use = 1;
+  start->tile->search_flag = 1;
 
   Graph **floors = NULL;
   size_t num_floors = 0;
@@ -66,7 +66,7 @@ static Graph *generate_room(const GeneratorParams *params) {
 
     build_wall_in(t);
 
-    t->tile->dfs_use = 0;
+    t->tile->search_flag = 0;
 
     memmove(&walls[index],
         &walls[index+1], sizeof(Graph *)*(--num_walls - index));
@@ -76,16 +76,16 @@ static Graph *generate_room(const GeneratorParams *params) {
     Graph *t2 = t;
     for (size_t i = 0; i < 4; i++) {
       t2 = t2->rotate_r;
-      if (t2->adjacent->tile->dfs_use == 0 &&
+      if (t2->adjacent->tile->search_flag == 0 &&
           t2->adjacent->tile->tile_type == TILE_TYPE_WALL) {
         walls = realloc(walls, (++num_walls) * sizeof(Graph *));
         walls[num_walls-1] = t2->adjacent;
-        walls[num_walls-1]->tile->dfs_use = 1;
+        walls[num_walls-1]->tile->search_flag = 1;
       }
     }
   }
   for (size_t i = 0; i < num_walls; i++) {
-    walls[i]->tile->dfs_use = 0;
+    walls[i]->tile->search_flag = 0;
   }
   free(walls);
 

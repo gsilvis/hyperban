@@ -26,7 +26,7 @@
 #define ROTATE_L(g) ((g)->rotate_r->rotate_r->rotate_r)
 #define ROTATE_B(g) ((g)->rotate_r->rotate_r)
 
-void clear_dfs(Graph* graph);
+void clear_search(Graph* graph);
 
 void free_graph(Graph *graph);
 

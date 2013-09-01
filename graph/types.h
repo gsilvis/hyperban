@@ -26,7 +26,7 @@
 typedef struct {
   char tile_type;
   char agent;
-  char dfs_use;
+  char search_flag;
 } Tile;
 
 enum {

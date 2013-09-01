@@ -29,7 +29,7 @@ Graph *build_initial_node (void)
   /* Set the Tile to the DEFAULT VALUES */
   t->tile_type = TILE_TYPE_DEFAULT;
   t->agent = AGENT_DEFAULT;
-  t->dfs_use = 0;
+  t->search_flag = 0;
 
   Graph *nodes[4];
   for (size_t i = 0; i < 4; i++)

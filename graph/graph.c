@@ -23,19 +23,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-void clear_dfs(Graph* graph) {
-  graph->tile->dfs_use = 0;
-  if (graph->adjacent && graph->adjacent->tile->dfs_use) {
-    clear_dfs(graph->adjacent);
+void clear_search(Graph* graph) {
+  graph->tile->search_flag = 0;
+  if (graph->adjacent && graph->adjacent->tile->search_flag) {
+    clear_search(graph->adjacent);
   }
-  if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->dfs_use) {
-    clear_dfs(graph->rotate_r->adjacent);
+  if (graph->rotate_r->adjacent && graph->rotate_r->adjacent->tile->search_flag) {
+    clear_search(graph->rotate_r->adjacent);
   }
-  if (ROTATE_B(graph)->adjacent && ROTATE_B(graph)->adjacent->tile->dfs_use) {
-    clear_dfs(ROTATE_B(graph)->adjacent);
+  if (ROTATE_B(graph)->adjacent && ROTATE_B(graph)->adjacent->tile->search_flag) {
+    clear_search(ROTATE_B(graph)->adjacent);
   }
-  if (ROTATE_L(graph)->adjacent && ROTATE_L(graph)->adjacent->tile->dfs_use) {
-    clear_dfs(ROTATE_L(graph)->adjacent);
+  if (ROTATE_L(graph)->adjacent && ROTATE_L(graph)->adjacent->tile->search_flag) {
+    clear_search(ROTATE_L(graph)->adjacent);
   }
 }
 

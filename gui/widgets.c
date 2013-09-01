@@ -123,7 +123,7 @@ static void renderer_draw(cairo_t *cr, double width, double height,
   cairo_set_source_rgb(cr, 0, 0, 0);
   cairo_stroke(cr);
 
-  clear_dfs(graph);
+  clear_search(graph);
 
   SquarePoints *origin = get_origin_square();
 
