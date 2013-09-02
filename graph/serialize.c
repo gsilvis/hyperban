@@ -81,15 +81,15 @@ QueueItem *dequeue (Queue *q) {
 void print_path (QueueItem *qi, FILE *file) {
   if (qi->parent) {
     print_path(qi->parent, file);
+    if (qi->whence != '\0') {
+      fputc(qi->whence, file);
+    }
+    fputc('F', file);
   }
-  if (qi->whence != '\0') {
-    fputc(qi->whence, file);
-  }
-  fputc('F', file);
 };
 
 void serialize_node (QueueItem *qi, FILE *file, Queue *q) {
-  const char chars[] = "BR\0L";
+  const char chars[] = "BL\0R";
   Graph *g = qi->g;
 
   /* Enqueue neighbours */
@@ -144,5 +144,6 @@ void serialize_graph (Graph *g, FILE *file) {
 }
 
 void serialize_board (Board *board, FILE *file) {
-  serialize_graph(board->graph, file);
+  /* We rotate twice to fix a bug where the board is saved upside-down. */
+  serialize_graph(board->graph->rotate_r->rotate_r, file);
 }
