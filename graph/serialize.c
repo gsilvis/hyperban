@@ -88,17 +88,16 @@ void print_path (QueueItem *qi, FILE *file) {
 };
 
 void serialize_node (QueueItem *qi, FILE *file, Queue *q) {
-  const char chars[] = "R\0LB";
+  const char chars[] = "BR\0L";
   Graph *g = qi->g;
 
   /* Enqueue neighbours */
-  Graph *next = g->rotate_r;
-  for (int i = 0; i < 4; i++, next = next->rotate_r) {
-    if (next->adjacent->tile->search_flag) {
+  for (int i = 0; i < 4; i++, g = g->rotate_r) {
+    if (g->adjacent->tile->search_flag) {
       continue;
     }
     QueueItem *new = malloc(sizeof(QueueItem));
-    new->g = next->adjacent;
+    new->g = g->adjacent;
     new->refs = 0;
     new->whence = chars[i];
     new->parent = qi;
