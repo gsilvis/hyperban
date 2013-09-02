@@ -65,13 +65,11 @@ typedef struct {
 } ConfigOption;
 
 
-struct graph_t {
+typedef struct graph_t {
   struct graph_t *rotate_r;
   struct graph_t *adjacent;
   Tile *tile;
-};
-
-typedef struct graph_t Graph;
+} Graph;
 
 typedef struct {
   Graph* graph;
