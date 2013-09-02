@@ -42,6 +42,7 @@ static const char *help_text =
 "  Make Wall: w\n"
 "  Make Box: b\n"
 "  Make Target: t\n"
+"  Delete agent: d\n"
 "  Rotate: ,/.\n"
 "  Save: s\n";
 
