@@ -28,6 +28,7 @@
 
 #include "types.h"
 #include "level.h"
+#include "graph.h"
 
 typedef struct queue_item_t {
   Graph *g;
@@ -124,6 +125,7 @@ void serialize_node (QueueItem *qi, FILE *file, Queue *q) {
 
 
 void serialize_graph (Graph *g, FILE *file) {
+  clear_search(g);
   Queue *q = new_queue();
   QueueItem *qi = malloc(sizeof(QueueItem));
   qi->g = g;
