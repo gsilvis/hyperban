@@ -38,6 +38,7 @@
 #define KEY_DELETE_ACTOR GDK_KEY_d
 #define KEY_ROT_LEFT GDK_KEY_comma
 #define KEY_ROT_RIGHT GDK_KEY_period
+#define KEY_SAVE GDK_KEY_s
 
 #define RENDERER_BORDER 10
 

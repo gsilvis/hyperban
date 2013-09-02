@@ -83,6 +83,7 @@ typedef struct {
   char *moves;
   size_t moves_length;
   int number_moves;
+  char *filename;
   /* expand as needed */
 } Board;
 
