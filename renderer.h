@@ -30,6 +30,8 @@
 #define KEY_DOWN GDK_KEY_Down
 #define KEY_UNDO GDK_KEY_BackSpace
 
+#define KEY_HELP GDK_KEY_h
+
 /* Editing Keys */
 #define KEY_MAKE_FLOOR GDK_KEY_f
 #define KEY_MAKE_WALL GDK_KEY_w

@@ -40,6 +40,7 @@ struct renderer_widget_options_t {
   GdkPixmap *pixmap;
   GtkLabel *moves_label;
   GtkLabel *boxes_label;
+  GtkWidget *help;
 };
 
 typedef struct renderer_widget_options_t RendererWidgetOptions;

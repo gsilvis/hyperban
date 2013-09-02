@@ -289,6 +289,16 @@ static void animate_move(RendererWidgetOptions *opts, Move m) {
   g_thread_unref(g_thread_new("draw thread", draw_thread, opts));
 }
 
+static void toggle_help(RendererWidgetOptions *opts) {
+  if (gtk_widget_get_visible(opts->help)) {
+    gtk_widget_hide(opts->help);
+  } else {
+    gtk_widget_show(opts->help);
+  }
+  // Force rendering widget to update perhaps changed allocation size.
+  gtk_main_iteration_do(FALSE);
+}
+
 static gboolean on_renderer_expose_event(GtkWidget *widget,
     GdkEventExpose *event, gpointer data) {
   RendererWidgetOptions *opts = data;
@@ -365,6 +375,9 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
       serialize_board(opts->board, f);
       fclose(f);
     }
+    break;
+  case KEY_HELP:
+    toggle_help(opts);
     break;
   default:
     return FALSE;

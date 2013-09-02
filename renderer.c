@@ -31,6 +31,20 @@
 #include "graph/board.h"
 #include "graph/generator.h"
 
+static const char *help_text =
+"General: \n"
+"  Move: Arrow Keys\n"
+"  Undo: Backspace\n"
+"  Show/Hide Help: h\n"
+"\n"
+"Editing: \n"
+"  Make Floor: f\n"
+"  Make Wall: w\n"
+"  Make Box: b\n"
+"  Make Target: t\n"
+"  Rotate: ,/.\n"
+"  Save: s\n";
+
 static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
   GError *error = NULL;
   gboolean klein = FALSE;
@@ -175,9 +189,11 @@ int main(int argc, char *argv[]) {
 
   GtkWidget *moves = gtk_label_new("Moves : ");
   GtkWidget *left = gtk_label_new("Boxes Left : ");
+  GtkWidget *help = gtk_label_new(help_text);
 
   opts->moves_label = GTK_LABEL(moves);
   opts->boxes_label = GTK_LABEL(left);
+  opts->help = help;
 
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(window), RENDERER_TITLE);
@@ -199,6 +215,9 @@ int main(int argc, char *argv[]) {
   gtk_box_pack_start(GTK_BOX(hbox), left, TRUE, TRUE, 0);
 
   gtk_widget_show_all(window);
+
+  gtk_widget_hide(help);
+  gtk_box_pack_start(GTK_BOX(vbox), help, FALSE, TRUE, 0);
 
   gtk_widget_grab_focus(renderer);
 
