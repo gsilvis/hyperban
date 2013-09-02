@@ -94,7 +94,7 @@ void serialize_node (QueueItem *qi, FILE *file, Queue *q) {
 
   /* Enqueue neighbours */
   for (int i = 0; i < 4; i++, g = g->rotate_r) {
-    if (g->adjacent->tile->search_flag) {
+    if (!g->adjacent || g->adjacent->tile->search_flag) {
       continue;
     }
     QueueItem *new = malloc(sizeof(QueueItem));
