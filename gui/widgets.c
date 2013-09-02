@@ -345,6 +345,20 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
     if (opts->editing)
       opts->board->graph = opts->board->graph->rotate_r;
     break;
+  case KEY_MAKE_BOX:
+    if (opts->editing) {
+      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_SPACE;
+      build_wall_in(opts->board->graph->adjacent);
+      opts->board->graph->adjacent->tile->agent = AGENT_BOX;
+      opts->board->unsolved++;
+    }
+    break;
+  case KEY_MAKE_TARGET:
+    if (opts->editing) {
+      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_TARGET;
+      build_wall_in(opts->board->graph->adjacent);
+    }
+    break;
   case KEY_SAVE:
     if (opts->editing) {
       FILE *f = fopen(opts->board->filename, "w");
