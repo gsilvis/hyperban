@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <gtk/gtk.h>
+#include <string.h>
 
 #include "gui/widgets.h"
 #include "renderer.h"
@@ -133,6 +134,7 @@ static RendererWidgetOptions *parse_args(int argc, char *argv[]) {
       goto FAIL;
     }
     board = board_assemble_full(map, cfg);
+    board->filename = strdup(level);
     free(map);
     free(cfg);
     if (board == NULL) {

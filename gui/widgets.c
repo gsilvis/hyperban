@@ -37,6 +37,7 @@
 #include "./rendering.h"
 #include "./cairo_helper.h"
 #include "../graph/generator.h"
+#include "../graph/serialize.h"
 
 static double get_time(void) {
   struct timespec now;
@@ -343,6 +344,13 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
   case KEY_ROT_RIGHT:
     if (opts->editing)
       opts->board->graph = opts->board->graph->rotate_r;
+    break;
+  case KEY_SAVE:
+    if (opts->editing) {
+      FILE *f = fopen(opts->board->filename, "w");
+      serialize_board(opts->board, f);
+      fclose(f);
+    }
     break;
   default:
     return FALSE;
