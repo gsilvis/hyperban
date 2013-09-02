@@ -88,12 +88,12 @@ void print_path (QueueItem *qi, FILE *file) {
 };
 
 void serialize_node (QueueItem *qi, FILE *file, Queue *q) {
-  const char chars[3] = "R\0L";
+  const char chars[3] = "R\0LB";
   Graph *g = qi->g;
 
   /* Enqueue neighbours */
   Graph *next = g->rotate_r;
-  for (int i = 0; i < 3; i++, next = next->rotate_r) {
+  for (int i = 0; i < 4; i++, next = next->rotate_r) {
     if (next->adjacent->tile->search_flag) {
       continue;
     }
