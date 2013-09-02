@@ -88,7 +88,7 @@ void print_path (QueueItem *qi, FILE *file) {
 };
 
 void serialize_node (QueueItem *qi, FILE *file, Queue *q) {
-  const char chars[3] = "R\0LB";
+  const char chars[] = "R\0LB";
   Graph *g = qi->g;
 
   /* Enqueue neighbours */
