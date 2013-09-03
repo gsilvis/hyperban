@@ -27,10 +27,10 @@
 typedef double matrix_el_t;
 
 typedef matrix_el_t
-    r3vector __attribute__ ((vector_size(sizeof(matrix_el_t)*4)));
+    r3vector __attribute__ ((vector_size(sizeof(matrix_el_t)*4), aligned(0x20)));
 
 typedef matrix_el_t
-    r3transform __attribute__((vector_size(sizeof(matrix_el_t)*4*4)));
+    r3transform __attribute__((vector_size(sizeof(matrix_el_t)*4*4), aligned(0x20)));
 
 typedef struct square_points_t {
   r3vector points[4];
@@ -100,5 +100,7 @@ r3vector poincare2klein(r3vector a);
 SquarePoints *transform_square(SquarePoints *points, r3transform *trans);
 
 SquarePoints *get_origin_square(void);
+
+SquarePoints *new_squarepoints(void);
 
 #endif /* __HYPERBAN_MATRIX_H */

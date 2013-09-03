@@ -23,6 +23,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../graph/consts.h"
 
@@ -140,7 +141,7 @@ r3vector poincare2klein(r3vector a) {
 }
 
 SquarePoints *transform_square(SquarePoints *square, r3transform *trans) {
-  SquarePoints *result = malloc(sizeof(SquarePoints));
+  SquarePoints *result = new_squarepoints();
   *result = (SquarePoints) {
     {
       apply_transformation(square->points[0], *trans),
@@ -154,8 +155,7 @@ SquarePoints *transform_square(SquarePoints *square, r3transform *trans) {
 
 /* returns points in clockwise order */
 SquarePoints *get_origin_square(void) {
-  SquarePoints *res = malloc(sizeof(SquarePoints));
-  *res = (SquarePoints) {
+  SquarePoints res = (SquarePoints) {
     {
       { MORE_MAGIC, -MORE_MAGIC, 1},
       { MORE_MAGIC,  MORE_MAGIC, 1},
@@ -163,5 +163,15 @@ SquarePoints *get_origin_square(void) {
       {-MORE_MAGIC, -MORE_MAGIC, 1}
     }
   };
-  return res;
+  SquarePoints *mres = new_squarepoints();
+  memcpy(mres, &res, sizeof(SquarePoints));
+  return mres;
+}
+
+SquarePoints *new_squarepoints(void) {
+  void *f = NULL;
+
+  posix_memalign(&f, 0x20, sizeof(SquarePoints));
+
+  return (SquarePoints*)f;
 }

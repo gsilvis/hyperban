@@ -21,6 +21,7 @@
 #include "rendering.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "../graph/graph.h"
 
@@ -53,7 +54,7 @@ void render_graph(RendererParams *params, Graph *graph) {
   queue->val = graph;
   queue->next = NULL;
   queue->dist = 1;
-  queue->points = malloc(sizeof(SquarePoints));
+  queue->points = new_squarepoints();
   *queue->points = *params->origin_square;
 
   while (queue != NULL) {
@@ -101,13 +102,15 @@ void render_graph(RendererParams *params, Graph *graph) {
 
 SquarePoints *move_square(SquarePoints *points, Move move) {
   size_t m = move;
-  SquarePoints *next_points = malloc(sizeof(SquarePoints));
+  SquarePoints *res = new_squarepoints();
   r3transform trans = hyperbolic_reflection(hyperbolic_midpoint(
       points->points[m], points->points[(m+3)%4]));
-  next_points->points[m] = apply_transformation(points->points[(m+2)%4],trans);
-  next_points->points[(m+1)%4] = points->points[m];
-  next_points->points[(m+3)%4] = apply_transformation(points->points[(m+1)%4],
+
+  res->points[m] = apply_transformation(points->points[(m+2)%4],trans);
+  res->points[(m+1)%4] = points->points[m];
+  res->points[(m+3)%4] = apply_transformation(points->points[(m+1)%4],
       trans);
-  next_points->points[(m+2)%4] = points->points[(m+3)%4];
-  return next_points;
+  res->points[(m+2)%4] = points->points[(m+3)%4];
+
+  return res;
 }
