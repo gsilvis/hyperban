@@ -126,7 +126,8 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 
   clear_search(graph);
 
-  SquarePoints *origin = get_origin_square();
+  SquarePoints *origin = new_squarepoints();
+  *origin = origin_square;
 
   if (frame != 0) {
     SquarePoints* next = move_square(origin, (m + 2) % 4);
@@ -136,7 +137,8 @@ static void renderer_draw(cairo_t *cr, double width, double height,
         hyperbolic_midpoint(next->points[2], next->points[3]));
     to = to * const_r3vector(frame);
     to[2] = 1;
-    r3transform transformation = hyperbolic_translation(from, to);
+    r3transform transformation;
+    hyperbolic_translation(from, to, &transformation);
     SquarePoints *temp = transform_square(origin, &transformation);
     free(origin);
     free(next);

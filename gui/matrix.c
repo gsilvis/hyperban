@@ -27,6 +27,31 @@
 
 #include "../graph/consts.h"
 
+static matrix_el_t minkowski_self_inner_product(r3vector a);
+
+static matrix_el_t minkowski_inner_product(r3vector a, r3vector b);
+
+static void outer_product(r3vector a, r3vector b, r3transform *out);
+
+static r3vector normalize_r3vector(r3vector a);
+
+static void multiply_transformations(r3transform *a, r3transform *b, r3transform *out);
+
+static matrix_el_t hyperbolic_distance(r3vector a, r3vector b);
+
+static const r3transform identity_transform;
+static const r3transform hyperbolic_identity_transform;
+
+static r3vector weierstrass2poincare(r3vector a);
+
+static r3vector poincare2weierstrass(r3vector a);
+
+static r3vector weierstrass2klein(r3vector a);
+
+static r3vector klein2weierstrass(r3vector a);
+
+static r3vector poincare2klein(r3vector a);
+
 // n = rows in mat1/res, m = cols in mat1/rows in mat2, l = cols in mat2/res
 // This is a macro because we use it on both r3vectors and r3transforms
 
@@ -50,27 +75,22 @@ matrix_el_t minkowski_inner_product(r3vector a, r3vector b) {
   return a[0] * b[0] + a[1] * b[1] - a[2] * b[2];
 }
 
-r3transform outer_product(r3vector a, r3vector b) {
-  r3transform result;
-  _MAT_MULT(a, b, 3, 1, 3, result);
-  return result;
+void outer_product(r3vector a, r3vector b, r3transform *out) {
+  _MAT_MULT(a, b, 3, 1, 3, *out);
 }
 
 r3vector normalize_r3vector(r3vector a) {
   return a / const_r3vector(a[2]);
 }
 
-r3vector apply_transformation(r3vector a, r3transform b) {
+r3vector apply_transformation(r3vector a, r3transform *b) {
   r3vector result;
-  _MAT_MULT(b, a, 3, 3, 1, result);
+  _MAT_MULT(*b, a, 3, 3, 1, result);
   return normalize_r3vector(result);
 };
 
-r3transform multiply_transformations(r3transform a,
-    r3transform b) {
-  r3transform result;
-  _MAT_MULT(a, b, 3, 3, 3, result);
-  return result;
+void multiply_transformations(r3transform *a, r3transform *b, r3transform *o) {
+  _MAT_MULT(*a, *b, 3, 3, 3, *o);
 }
 
 matrix_el_t hyperbolic_distance(r3vector a, r3vector b) {
@@ -83,15 +103,17 @@ matrix_el_t hyperbolic_distance(r3vector a, r3vector b) {
   return 2 * acosh(sqrt(numerator/denominator));
 }
 
-r3transform hyperbolic_reflection(r3vector a) {
+void hyperbolic_reflection(r3vector a, r3transform *out) {
   matrix_el_t denom = minkowski_self_inner_product(a);
 
-  r3vector swapped = a;
-  swapped[2] *= -1;
+  matrix_el_t s = 2.0 / denom;
 
-  swapped *= const_r3vector(2.0/denom);
+  r3vector swapped = {a[0]*s, a[1]*s, a[2]*-1*s};
 
-  return identity_transform() - outer_product(a, swapped);
+  outer_product(a, swapped, out);
+
+  *out *= -1;
+  *out += identity_transform;
 }
 
 r3vector hyperbolic_midpoint(r3vector a, r3vector b) {
@@ -105,11 +127,14 @@ r3vector hyperbolic_midpoint(r3vector a, r3vector b) {
   return normalize_r3vector(a * const_r3vector(c1) + b * const_r3vector(c2));
 }
 
-r3transform hyperbolic_translation(r3vector a, r3vector b) {
-  r3transform rm = hyperbolic_reflection(hyperbolic_midpoint(a, b));
-  r3transform ra = hyperbolic_reflection(a);
+void hyperbolic_translation(r3vector a, r3vector b, r3transform *o) {
+  r3transform rm;
+  hyperbolic_reflection(hyperbolic_midpoint(a, b), &rm);
 
-  return multiply_transformations(rm, ra);
+  r3transform ra;
+  hyperbolic_reflection(a, &ra);
+
+  multiply_transformations(&rm, &ra, o);
 }
 
 r3vector weierstrass2poincare(r3vector a) {
@@ -144,29 +169,23 @@ SquarePoints *transform_square(SquarePoints *square, r3transform *trans) {
   SquarePoints *result = new_squarepoints();
   *result = (SquarePoints) {
     {
-      apply_transformation(square->points[0], *trans),
-      apply_transformation(square->points[1], *trans),
-      apply_transformation(square->points[2], *trans),
-      apply_transformation(square->points[3], *trans)
+      apply_transformation(square->points[0], trans),
+      apply_transformation(square->points[1], trans),
+      apply_transformation(square->points[2], trans),
+      apply_transformation(square->points[3], trans)
     }
   };
   return result;
 }
 
-/* returns points in clockwise order */
-SquarePoints *get_origin_square(void) {
-  SquarePoints res = (SquarePoints) {
-    {
-      { MORE_MAGIC, -MORE_MAGIC, 1},
-      { MORE_MAGIC,  MORE_MAGIC, 1},
-      {-MORE_MAGIC,  MORE_MAGIC, 1},
-      {-MORE_MAGIC, -MORE_MAGIC, 1}
-    }
-  };
-  SquarePoints *mres = new_squarepoints();
-  memcpy(mres, &res, sizeof(SquarePoints));
-  return mres;
-}
+const SquarePoints origin_square = {
+  {
+    { MORE_MAGIC, -MORE_MAGIC, 1},
+    { MORE_MAGIC,  MORE_MAGIC, 1},
+    {-MORE_MAGIC,  MORE_MAGIC, 1},
+    {-MORE_MAGIC, -MORE_MAGIC, 1}
+  }
+};
 
 SquarePoints *new_squarepoints(void) {
   void *f = NULL;
@@ -175,3 +194,15 @@ SquarePoints *new_squarepoints(void) {
 
   return (SquarePoints*)f;
 }
+
+static const r3transform identity_transform = {
+  1, 0, 0,
+  0, 1, 0,
+  0, 0, 1,
+};
+
+static const r3transform hyperbolic_identity_transform = {
+  1, 0, 0,
+  0, 1, 0,
+  0, 0, -1,
+};

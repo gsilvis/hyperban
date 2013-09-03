@@ -103,13 +103,14 @@ void render_graph(RendererParams *params, Graph *graph) {
 SquarePoints *move_square(SquarePoints *points, Move move) {
   size_t m = move;
   SquarePoints *res = new_squarepoints();
-  r3transform trans = hyperbolic_reflection(hyperbolic_midpoint(
-      points->points[m], points->points[(m+3)%4]));
+  r3transform trans;
+  hyperbolic_reflection(hyperbolic_midpoint(
+      points->points[m], points->points[(m+3)%4]), &trans);
 
-  res->points[m] = apply_transformation(points->points[(m+2)%4],trans);
+  res->points[m] = apply_transformation(points->points[(m+2)%4], &trans);
   res->points[(m+1)%4] = points->points[m];
   res->points[(m+3)%4] = apply_transformation(points->points[(m+1)%4],
-      trans);
+      &trans);
   res->points[(m+2)%4] = points->points[(m+3)%4];
 
   return res;

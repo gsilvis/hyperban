@@ -38,69 +38,26 @@ typedef struct square_points_t {
 
 static inline r3vector const_r3vector(matrix_el_t a) {
   return (r3vector) {
-      a,a,a
-    };
+    a,a,a
+  };
 }
 static inline r3transform const_r3transform(matrix_el_t a) {
   return (r3transform) {
-      a,a,a,
-      a,a,a,
-      a,a,a
-    };
-}
-
-matrix_el_t minkowski_self_inner_product(r3vector a);
-
-matrix_el_t minkowski_inner_product(r3vector a, r3vector b);
-
-r3transform outer_product(r3vector a, r3vector b);
-
-r3vector normalize_r3vector(r3vector a);
-
-r3vector apply_transformation(r3vector a, r3transform b);
-
-r3transform multiply_transformations(r3transform a, r3transform b);
-
-matrix_el_t hyperbolic_distance(r3vector a, r3vector b);
-
-static inline r3transform identity_transform(void) {
-  return (r3transform) {
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1,
+    a,a,a,
+    a,a,a,
+    a,a,a
   };
 }
 
-static inline r3transform hyperbolic_identity_transform(void) {
-  return (r3transform) {
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, -1,
-  };
-}
-
-r3transform hyperbolic_reflection(r3vector a);
-
+SquarePoints *new_squarepoints(void);
+void hyperbolic_reflection(r3vector a, r3transform *out);
 r3vector hyperbolic_midpoint(r3vector a, r3vector b);
-
-r3transform hyperbolic_translation(r3vector a, r3vector b);
-
-r3vector weierstrass2poincare(r3vector a);
-
-r3vector poincare2weierstrass(r3vector a);
-
-r3vector weierstrass2klein(r3vector a);
-
-r3vector klein2weierstrass(r3vector a);
+r3vector apply_transformation(r3vector a, r3transform *b);
+void hyperbolic_translation(r3vector a, r3vector b, r3transform *out);
 
 r3vector klein2poincare(r3vector a);
 
-r3vector poincare2klein(r3vector a);
-
+extern const SquarePoints origin_square;
 SquarePoints *transform_square(SquarePoints *points, r3transform *trans);
-
-SquarePoints *get_origin_square(void);
-
-SquarePoints *new_squarepoints(void);
 
 #endif /* __HYPERBAN_MATRIX_H */

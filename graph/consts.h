@@ -28,6 +28,6 @@
    it for things. */
 #define MAGIC 0.6871214994450249857749213334
 
-#define MORE_MAGIC (MAGIC/sqrt(2.0))
+#define MORE_MAGIC (MAGIC/M_SQRT2)
 
 #endif /* __HYPERBAN__CONSTS_H */
