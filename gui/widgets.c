@@ -181,12 +181,13 @@ static gpointer draw_thread(gpointer ptr) {
   RendererWidgetOptions *opts = ptr;
   if (opts->pixmap == NULL) return NULL;
 
-  int width, height;
+  int width, height, width2, height2;
 
   cairo_matrix_t mat;
 
   cairo_matrix_init_scale(&mat, 1.0/opts->scale, 1.0/opts->scale);
 
+ rerender:
   gdk_threads_enter();
   gdk_pixmap_get_size(opts->pixmap, &width, &height);
   gdk_threads_leave();
@@ -275,10 +276,14 @@ static gpointer draw_thread(gpointer ptr) {
   gdk_window_invalidate_rect(opts->widget->window, NULL, FALSE);
 
   set_labels(opts);
-
+  gdk_pixmap_get_size(opts->pixmap, &width2, &height2);
   gdk_threads_leave();
 
   cairo_surface_destroy(cst);
+
+  if (width != width2 || height != height2) {
+    goto rerender;
+  }
 
   g_atomic_int_set(&opts->drawing, FALSE);
 
@@ -286,6 +291,7 @@ static gpointer draw_thread(gpointer ptr) {
 }
 
 static void animate_move(RendererWidgetOptions *opts, Move m) {
+  if (g_atomic_int_get(&opts->drawing)) return;
   g_atomic_int_set(&opts->drawing, TRUE);
   opts->move = m;
   g_thread_unref(g_thread_new("draw thread", draw_thread, opts));
@@ -390,7 +396,7 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
     break;
   case KEY_HELP:
     toggle_help(opts);
-    break;
+    return FALSE;
   default:
     return FALSE;
   }
