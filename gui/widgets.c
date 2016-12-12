@@ -20,12 +20,10 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkkeysyms.h>
-#include <cairo.h>
 #include <sys/time.h>
 #include <time.h>
+
+#include "cairo.h"
 
 #include "./widgets.h"
 #include "../renderer.h"
@@ -39,28 +37,13 @@
 #include "../graph/generator.h"
 #include "../graph/serialize.h"
 
-static double get_time(void) {
-  struct timespec now;
-  /* CLOCK_THREAD_CPUTIME_ID so I can compare values (inside a thread) */
-  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
-  return now.tv_sec + now.tv_nsec * 10E-9;
-}
-
-void free_renderer_options(RendererWidgetOptions *o) {
-  if (o->board)
-    free_board(o->board);
-  if (o->pixmap)
-    g_object_unref(o->pixmap);
-  free(o);
-}
-
-static void draw_tile(RendererParams *params, SquarePoints *points,
+void draw_tile(RendererParams *params, SquarePoints *points,
     Tile *tile) {
   cairo_t *cr = params->data;
   if (params->projection == PROJECTION_KLEIN) {
     for (size_t i = 0; i < 4; i++) {
       r3vector projected = points->points[i];
-      cairo_line_to(cr, projected[0], projected[1]);
+      cairo_line_to(cr, projected.els[0], projected.els[1]);
     }
     cairo_close_path(cr);
   } else if (params->projection == PROJECTION_POINCARE) {
@@ -76,10 +59,10 @@ static void draw_tile(RendererParams *params, SquarePoints *points,
       klein2poincare(hyperbolic_midpoint(points->points[2], points->points[3])),
       klein2poincare(hyperbolic_midpoint(points->points[3], points->points[0]))
     };
-    cairo_move_to(cr, projected[0][0], projected[0][1]);
+    cairo_move_to(cr, projected[0].els[0], projected[0].els[1]);
     for (size_t i = 0; i < 4; i++) {
-      circle_to(cr, projected[i][0], projected[i][1], midpoints[i][0],
-          midpoints[i][1], projected[(i+1)%4][0], projected[(i+1)%4][1]);
+      circle_to(cr, projected[i].els[0], projected[i].els[1], midpoints[i].els[0],
+          midpoints[i].els[1], projected[(i+1)%4].els[0], projected[(i+1)%4].els[1]);
     }
     cairo_close_path(cr);
   }
@@ -102,7 +85,7 @@ static void draw_tile(RendererParams *params, SquarePoints *points,
   cairo_stroke(cr);
 }
 
-static void renderer_draw(cairo_t *cr, double width, double height,
+void renderer_draw(cairo_t *cr, double width, double height,
     Graph* graph, HyperbolicProjection projection, Move m, double frame) {
   cairo_set_source_rgb(cr, 1, 1, 1);
   cairo_paint(cr);
@@ -131,12 +114,13 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 
   if (frame != 0) {
     SquarePoints* next = move_square(origin, (m + 2) % 4);
-    r3vector from = {0, 0, 1};
+    r3vector from = {{0, 0, 1}};
     r3vector to = hyperbolic_midpoint(
         hyperbolic_midpoint(next->points[0], next->points[1]),
         hyperbolic_midpoint(next->points[2], next->points[3]));
-    to = to * const_r3vector(frame);
-    to[2] = 1;
+    to.els[1] *= frame;
+    to.els[0] *= frame;
+    to.els[2] = 1;
     r3transform transformation;
     hyperbolic_translation(from, to, &transformation);
     SquarePoints *temp = transform_square(origin, &transformation);
@@ -165,161 +149,7 @@ static void renderer_draw(cairo_t *cr, double width, double height,
 
   return;
 }
-
-static void set_labels(RendererWidgetOptions *opts) {
-  char *t;
-  t = g_strdup_printf(BOXES_TEXT, opts->board->unsolved);
-  gtk_label_set_text(opts->boxes_label, t);
-  g_free(t);
-
-  t = g_strdup_printf(MOVES_TEXT, opts->board->number_moves);
-  gtk_label_set_text(opts->moves_label, t);
-  g_free(t);
-}
-
-static gpointer draw_thread(gpointer ptr) {
-  RendererWidgetOptions *opts = ptr;
-  if (opts->pixmap == NULL) return NULL;
-
-  int width, height, width2, height2;
-
-  cairo_matrix_t mat;
-
-  cairo_matrix_init_scale(&mat, 1.0/opts->scale, 1.0/opts->scale);
-
- rerender:
-  gdk_threads_enter();
-  gdk_pixmap_get_size(opts->pixmap, &width, &height);
-  gdk_threads_leave();
-
-  cairo_surface_t *cst = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-      width / opts->scale, height / opts->scale);
-  Graph* oldpos = opts->board->graph;
-  int res = 0;
-  if (opts->move >= 0) {
-    res = (perform_move(opts->board, opts->move) != RESULT_NO_MOVE_POSSIBLE);
-  } else if (opts->move == -2) {
-    res = (unperform_move(opts->board));
-    opts->move = -1;
-    switch(res) {
-    case 'r': case 'R':
-      opts->move++;
-    case 'u': case 'U':
-      opts->move++;
-    case 'l': case 'L':
-      opts->move++;
-    case 'd': case 'D':
-      opts->move++;
-    }
-  }
-  if (res && opts->animation) {
-    double start = get_time();
-
-    while (TRUE) {
-      double frame_start = get_time();
-      cairo_t *cr = cairo_create(cst);
-
-      double frame = (fmin(RENDERER_ANIMATION_TIME, frame_start-start) /
-          RENDERER_ANIMATION_TIME);
-
-      renderer_draw(cr, width / opts->scale, height / opts->scale, oldpos,
-          opts->projection, opts->move, frame);
-
-      cairo_destroy(cr);
-
-      gdk_threads_enter();
-
-      cairo_t *cr_win = gdk_cairo_create(opts->pixmap);
-      cairo_set_source_rgb(cr_win, 1, 1, 1);
-      cairo_paint(cr_win);
-      cairo_set_source_surface(cr_win, cst, 0, 0);
-      cairo_pattern_set_matrix(cairo_get_source(cr_win), &mat);
-      cairo_pattern_set_filter(cairo_get_source(cr_win), RENDERER_INTERP_MODE);
-      cairo_paint(cr_win);
-      cairo_destroy(cr_win);
-
-      gdk_window_invalidate_rect(opts->widget->window, NULL, FALSE);
-      gdk_threads_leave();
-
-      double frame_end = get_time();
-      if (frame_end - start > RENDERER_ANIMATION_TIME) {
-        break;
-      }
-      if (frame_end - frame_start < 1.0/RENDERER_MAX_FRAME_RATE) {
-        double sleeptime = 1.0/RENDERER_MAX_FRAME_RATE -
-            (frame_end - frame_start);
-        struct timespec sleep;
-        sleep.tv_sec = sleeptime;
-        sleep.tv_nsec = fmin(999999999, sleeptime/10E-9);
-        nanosleep(&sleep, NULL);
-      }
-    }
-  }
-  cairo_t *cr = cairo_create(cst);
-
-  renderer_draw(cr, width / opts->scale, height / opts->scale,
-      opts->board->graph, opts->projection, 0, 0);
-
-  cairo_destroy(cr);
-
-  gdk_threads_enter();
-
-  cairo_t *cr_win = gdk_cairo_create(opts->pixmap);
-  cairo_set_source_rgb(cr_win, 1, 1, 1);
-  cairo_paint(cr_win);
-  cairo_set_source_surface(cr_win, cst, 0, 0);
-  cairo_pattern_set_matrix(cairo_get_source(cr_win), &mat);
-  cairo_pattern_set_filter(cairo_get_source(cr_win), RENDERER_INTERP_MODE);
-  cairo_paint(cr_win);
-  cairo_destroy(cr_win);
-
-  gdk_window_invalidate_rect(opts->widget->window, NULL, FALSE);
-
-  set_labels(opts);
-  gdk_pixmap_get_size(opts->pixmap, &width2, &height2);
-  gdk_threads_leave();
-
-  cairo_surface_destroy(cst);
-
-  if (width != width2 || height != height2) {
-    goto rerender;
-  }
-
-  g_atomic_int_set(&opts->drawing, FALSE);
-
-  return NULL;
-}
-
-static void animate_move(RendererWidgetOptions *opts, Move m) {
-  if (g_atomic_int_get(&opts->drawing)) return;
-  g_atomic_int_set(&opts->drawing, TRUE);
-  opts->move = m;
-  g_thread_unref(g_thread_new("draw thread", draw_thread, opts));
-}
-
-static void toggle_help(RendererWidgetOptions *opts) {
-  if (gtk_widget_get_visible(opts->help)) {
-    gtk_widget_hide(opts->help);
-  } else {
-    gtk_widget_show(opts->help);
-  }
-  // Force rendering widget to update perhaps changed allocation size.
-  gtk_main_iteration_do(FALSE);
-}
-
-static gboolean on_renderer_expose_event(GtkWidget *widget,
-    GdkEventExpose *event, gpointer data) {
-  RendererWidgetOptions *opts = data;
-  if (opts->pixmap) {
-    gdk_draw_drawable(widget->window,
-        widget->style->fg_gc[GTK_WIDGET_STATE(widget)], opts->pixmap,
-        event->area.x, event->area.y,
-        event->area.x, event->area.y,
-        event->area.width, event->area.height);
-  }
-  return FALSE;
-}
-
+/*
 static gboolean on_renderer_key_press_event(GtkWidget *widget,
     GdkEventKey *event, gpointer data) {
   RendererWidgetOptions *opts = data;
@@ -404,68 +234,4 @@ static gboolean on_renderer_key_press_event(GtkWidget *widget,
   animate_move(opts, m);
   return FALSE;
 }
-
-static gboolean on_renderer_realize(GtkWidget *widget, gpointer data) {
-  RendererWidgetOptions *opts = data;
-
-  GdkRectangle allocation;
-
-  gtk_widget_get_allocation(widget, &allocation);
-
-  int width = allocation.width, height = allocation.height;
-  int pwidth = -1, pheight = -1;
-  if (opts->pixmap != NULL) {
-    gdk_pixmap_get_size(opts->pixmap, &pwidth, &pheight);
-  }
-  if (pwidth != width || pheight != height) {
-    GdkPixmap *tmp = gdk_pixmap_new(widget->window, width,
-        height, -1);
-    if (opts->pixmap != NULL) {
-      int minw = width;
-      int minh = height;
-      if(pwidth < minw && pwidth != -1) minw = pwidth;
-      if(pheight < minh && pheight != -1) minh = pheight;
-      gdk_draw_drawable(tmp, widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
-          opts->pixmap, 0, 0, 0, 0, minw, minh);
-      g_object_unref(opts->pixmap);
-    }
-    opts->pixmap = tmp;
-    animate_move(opts, -1);
-  }
-  return FALSE;
-}
-
-static gboolean on_renderer_size_allocate(GtkWidget *widget,
-    GdkRectangle* allocation, gpointer data) {
-  if (gtk_widget_get_realized(widget))
-    on_renderer_realize(widget, data);
-  return FALSE;
-}
-
-GtkWidget *get_renderer_widget(RendererWidgetOptions *opts) {
-  opts->pixmap = NULL;
-
-  GtkWidget *result = gtk_event_box_new();
-
-  gtk_widget_add_events(result, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
-
-  g_signal_connect(result, "expose-event",
-      G_CALLBACK(on_renderer_expose_event), opts);
-  g_signal_connect(result, "key-press-event",
-      G_CALLBACK(on_renderer_key_press_event), opts);
-  g_signal_connect(result, "realize",
-      G_CALLBACK(on_renderer_realize), opts);
-  g_signal_connect(result, "size-allocate",
-      G_CALLBACK(on_renderer_size_allocate), opts);
-
-  gtk_widget_set_size_request(result, RENDERER_MIN_WIDTH, RENDERER_MIN_HEIGHT);
-
-  gtk_widget_set_app_paintable(result, TRUE);
-  gtk_widget_set_double_buffered(result, FALSE);
-
-  gtk_widget_set_can_focus(result, TRUE);
-
-  opts->widget = result;
-
-  return result;
-}
+*/

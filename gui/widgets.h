@@ -21,32 +21,16 @@
 #ifndef __HYPERBAN_WIDGETS_H
 #define __HYPERBAN_WIDGETS_H
 
-#include <gtk/gtk.h>
+#include "cairo.h"
 
 #include "./rendering.h"
 #include "../graph/build.h"
 #include "../graph/types.h"
 
-/* Yes, I am aware this should really just extend EventBox */
-struct renderer_widget_options_t {
-  HyperbolicProjection projection;
-  Board* board;
-  gboolean drawing;
-  gboolean animation;
-  gboolean editing;
-  double scale;
-  Move move; // simply to ease pasing a pointer to this struct to a thread
-  GtkWidget *widget;
-  GdkPixmap *pixmap;
-  GtkLabel *moves_label;
-  GtkLabel *boxes_label;
-  GtkWidget *help;
-};
 
-typedef struct renderer_widget_options_t RendererWidgetOptions;
+void draw_tile(RendererParams *params, SquarePoints *points, Tile *tile);
 
-void free_renderer_options(RendererWidgetOptions *o);
-
-GtkWidget *get_renderer_widget(RendererWidgetOptions *opts);
+void renderer_draw(cairo_t *cr, double width, double height,
+    Graph* graph, HyperbolicProjection projection, Move m, double frame);
 
 #endif /* __HYPERBAN_WIDGETS_H */

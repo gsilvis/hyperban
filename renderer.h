@@ -21,8 +21,7 @@
 #ifndef __HYPERBAN_RENDERER_H
 #define __HYPERBAN_RENDERER_H
 
-#include <gdk/gdkkeysyms.h>
-#include <cairo.h>
+#include "gui/cairo.h"
 
 #define KEY_UP GDK_KEY_Up
 #define KEY_RIGHT GDK_KEY_Right

@@ -20,7 +20,7 @@
 
 #include "types.h"
 #include "build.h"
-#include <malloc.h>
+#include <stdlib.h>
 
 Graph *build_initial_node (void)
 {

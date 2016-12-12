@@ -26,27 +26,25 @@
 
 typedef double matrix_el_t;
 
-typedef matrix_el_t
-    r3vector __attribute__ ((vector_size(sizeof(matrix_el_t)*4), aligned(0x20)));
+typedef struct { matrix_el_t els[3]; } r3vector;
 
-typedef matrix_el_t
-    r3transform __attribute__((vector_size(sizeof(matrix_el_t)*4*4), aligned(0x20)));
+typedef struct { matrix_el_t els[9]; } r3transform;
 
 typedef struct square_points_t {
   r3vector points[4];
 } SquarePoints;
 
 static inline r3vector const_r3vector(matrix_el_t a) {
-  return (r3vector) {
+  return (r3vector) {{
     a,a,a
-  };
+  }};
 }
 static inline r3transform const_r3transform(matrix_el_t a) {
-  return (r3transform) {
+  return (r3transform) {{
     a,a,a,
     a,a,a,
     a,a,a
-  };
+  }};
 }
 
 SquarePoints *new_squarepoints(void);

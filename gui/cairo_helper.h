@@ -21,7 +21,7 @@
 #ifndef __HYPERBAN_CAIRO_HELPER_H
 #define __HYPERBAN_CAIRO_HELPER_H
 
-#include <cairo.h>
+#include "cairo.h"
 
 #define MAX_ARC_RADIUS 10E1
 

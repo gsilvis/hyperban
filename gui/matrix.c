@@ -59,20 +59,20 @@ static r3vector poincare2klein(r3vector a);
   do { \
     for (size_t _n = 0; _n < (n); _n++) { \
       for (size_t _l = 0; _l < (l); _l++) { \
-        (res)[(l)*_n+_l] = 0; \
+        (res).els[(l)*_n+_l] = 0; \
         for (size_t _m = 0; _m < (m); _m++) { \
-          (res)[(l) * _n + _l] += (mat1)[_n*(m)+_m] * (mat2)[_m*(l)+_l]; \
+          (res).els[(l) * _n + _l] += (mat1).els[_n*(m)+_m] * (mat2).els[_m*(l)+_l]; \
         } \
       } \
     } \
   } while (0)
 
 matrix_el_t minkowski_self_inner_product(r3vector a) {
-  return a[0] * a[0] + a[1] * a[1] - a[2] * a[2];
+  return a.els[0] * a.els[0] + a.els[1] * a.els[1] - a.els[2] * a.els[2];
 }
 
 matrix_el_t minkowski_inner_product(r3vector a, r3vector b) {
-  return a[0] * b[0] + a[1] * b[1] - a[2] * b[2];
+  return a.els[0] * b.els[0] + a.els[1] * b.els[1] - a.els[2] * b.els[2];
 }
 
 void outer_product(r3vector a, r3vector b, r3transform *out) {
@@ -80,7 +80,11 @@ void outer_product(r3vector a, r3vector b, r3transform *out) {
 }
 
 r3vector normalize_r3vector(r3vector a) {
-  return a / const_r3vector(a[2]);
+  r3vector res = a;
+  res.els[0] /= a.els[2];
+  res.els[1] /= a.els[2];
+  res.els[2] /= a.els[2];
+  return res;
 }
 
 r3vector apply_transformation(r3vector a, r3transform *b) {
@@ -108,12 +112,11 @@ void hyperbolic_reflection(r3vector a, r3transform *out) {
 
   matrix_el_t s = 2.0 / denom;
 
-  r3vector swapped = {a[0]*s, a[1]*s, a[2]*-1*s};
+  r3vector swapped = {{a.els[0]*s, a.els[1]*s, a.els[2]*-1*s}};
 
   outer_product(a, swapped, out);
 
-  *out *= -1;
-  *out += identity_transform;
+  for (int i = 0; i < 9; i++) { (*out).els[i] *= -1; (*out).els[i] += identity_transform.els[i]; }
 }
 
 r3vector hyperbolic_midpoint(r3vector a, r3vector b) {
@@ -124,7 +127,9 @@ r3vector hyperbolic_midpoint(r3vector a, r3vector b) {
   matrix_el_t c1 = sqrt(t2 * t3);
   matrix_el_t c2 = sqrt(t1 * t3);
 
-  return normalize_r3vector(a * const_r3vector(c1) + b * const_r3vector(c2));
+  r3vector t = {{a.els[0] * c1 + b.els[0] * c2, a.els[1] * c1 + b.els[1] * c2, a.els[2] * c1 + b.els[2] * c2}};
+
+  return normalize_r3vector(t);
 }
 
 void hyperbolic_translation(r3vector a, r3vector b, r3transform *o) {
@@ -138,13 +143,17 @@ void hyperbolic_translation(r3vector a, r3vector b, r3transform *o) {
 }
 
 r3vector weierstrass2poincare(r3vector a) {
-  return a / const_r3vector((a[2] + 1));
+  r3vector t;
+  t.els[0] /= (a.els[2] + 1);
+  t.els[1] /= (a.els[2] + 1);
+  t.els[2] /= (a.els[2] + 1);
+  return t;
 }
 
 r3vector poincare2weierstrass(r3vector a) {
-  matrix_el_t d = 1.0 / (1 - a[0]*a[0] - a[1]*a[1]);
-  r3vector result = {2*a[0], 2*a[1], (1 + a[0] * a[0] + a[1] * a[1])};
-  return result * const_r3vector(d);
+  matrix_el_t d = 1.0 / (1 - a.els[0]*a.els[0] - a.els[1]*a.els[1]);
+  r3vector result = {{2*a.els[0] * d, 2*a.els[1] * d, (1 + a.els[0] * a.els[0] + a.els[1] * a.els[1]) * d}};
+  return result;
 }
 
 r3vector weierstrass2klein(r3vector a) {
@@ -152,13 +161,15 @@ r3vector weierstrass2klein(r3vector a) {
 }
 
 r3vector klein2weierstrass(r3vector a) {
-  matrix_el_t d = sqrt(1 - a[0]*a[0] - a[1]*a[1]);
-  return a / const_r3vector(d);
+  matrix_el_t d = sqrt(1 - a.els[0]*a.els[0] - a.els[1]*a.els[1]);
+  r3vector t = {{ a.els[0]/d, a.els[1]/d, a.els[2]/d}};
+  return t;
 }
 
 r3vector klein2poincare(r3vector a) {
-  matrix_el_t d = sqrt(1 - a[0]*a[0] - a[1]*a[1]) + 1.0;
-  return a / const_r3vector(d);
+  matrix_el_t d = sqrt(1 - a.els[0]*a.els[0] - a.els[1]*a.els[1]) + 1.0;
+  r3vector t = {{ a.els[0]/d, a.els[1]/d, a.els[2]/d}};
+  return t;
 }
 
 r3vector poincare2klein(r3vector a) {
@@ -180,29 +191,29 @@ SquarePoints *transform_square(SquarePoints *square, r3transform *trans) {
 
 const SquarePoints origin_square = {
   {
-    { MORE_MAGIC, -MORE_MAGIC, 1},
-    { MORE_MAGIC,  MORE_MAGIC, 1},
-    {-MORE_MAGIC,  MORE_MAGIC, 1},
-    {-MORE_MAGIC, -MORE_MAGIC, 1}
+    {{ MORE_MAGIC, -MORE_MAGIC, 1}},
+    {{ MORE_MAGIC,  MORE_MAGIC, 1}},
+    {{-MORE_MAGIC,  MORE_MAGIC, 1}},
+    {{-MORE_MAGIC, -MORE_MAGIC, 1}}
   }
 };
 
 SquarePoints *new_squarepoints(void) {
   void *f = NULL;
 
-  posix_memalign(&f, 0x20, sizeof(SquarePoints));
+  f = malloc(sizeof(SquarePoints));
 
   return (SquarePoints*)f;
 }
 
-static const r3transform identity_transform = {
+static const r3transform identity_transform = {{
   1, 0, 0,
   0, 1, 0,
   0, 0, 1,
-};
+}};
 
-static const r3transform hyperbolic_identity_transform = {
+static const r3transform hyperbolic_identity_transform = {{
   1, 0, 0,
   0, 1, 0,
   0, 0, -1,
-};
+}};
