@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  var Module = {
+    onRuntimeInitialized: function() {
+      var load = Module.cwrap('load_board', 'number', ['string']);
+      var _draw = Module.cwrap('draw_board', 'number', ['number', 'number', 'number']);
+      var keypress = Module.cwrap("do_keypress", "number", ["number"]);
+
+      console.log(load("levels/easy.txt"));
+
+      CTX = document.getElementById("canvas").getContext("2d");
+      var draw = function() {
+        CTX.save();
+        _draw(0, 512, 512);
+        CTX.restore();
+      };
+
+      draw();
+      document.addEventListener("keydown", function(event) {
+          if(keypress(event.keyCode)) { draw(); }
+      });
+    }
+  };
+</script>
+<script src="renderer.js"></script>
+</head>
+
+<body>
+<canvas id="canvas" width="512" height="512">
+</canvas>
+</body>
+</html>

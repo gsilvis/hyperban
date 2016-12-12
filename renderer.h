@@ -23,10 +23,10 @@
 
 #include "gui/cairo.h"
 
-#define KEY_UP GDK_KEY_Up
-#define KEY_RIGHT GDK_KEY_Right
-#define KEY_LEFT GDK_KEY_Left
-#define KEY_DOWN GDK_KEY_Down
+#define KEY_UP 87
+#define KEY_RIGHT 68
+#define KEY_LEFT 65
+#define KEY_DOWN 83
 #define KEY_UNDO GDK_KEY_BackSpace
 
 #define KEY_HELP GDK_KEY_h
