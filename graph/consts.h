@@ -27,6 +27,7 @@
    72-degree angles.  You'll probably want to divide it by sqrt(2) when using
    it for things. */
 #define MAGIC 0.6871214994450249857749213334
+/* sqrt(2/sqrt(5)) / sqrt(1 - 2/sqrt(5)) */
 
 #define MORE_MAGIC (MAGIC/M_SQRT2)
 

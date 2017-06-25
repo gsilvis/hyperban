@@ -9,7 +9,7 @@ mpmath.mp.pretty = True
 def normalize(a):
     return a/a[3]
 
-mink_ident = sympy.matrices.Matrix(
+mink_ident = sympy.Matrix(
   [[1,0,0,0],
    [0,1,0,0],
    [0,0,1,0],
@@ -26,9 +26,9 @@ def reflect(a):
     result = outer_product(a, a)
     result = result * mink_ident
     result = result * 2 / denom
-    return sympy.matrices.eye(4) - result
+    return sympy.eye(4) - result
 
-origin = sympy.matrices.Matrix([0,0,0,1])
+origin = sympy.Matrix([0,0,0,1])
 
 def midpoint(a, b):
     return a*(sympy.sqrt(mink_inner_product(b, b) * mink_inner_product(a, b))) + b*(sympy.sqrt(mink_inner_product(a, a) * mink_inner_product(a, b)))
@@ -41,14 +41,14 @@ def translate(a, b):
 
 #  Takes a number of RADIANS
 def rotate(theta):
-    return sympy.matrices.Matrix(
+    return sympy.Matrix(
       [[sympy.cos(theta), -sympy.sin(theta), 0, 0],
        [sympy.sin(theta), sympy.cos(theta), 0, 0],
        [0, 0, 1, 0],
        [0, 0, 0, 1]])
 
 def matratsimp(mat):
-    return sympy.matrices.Matrix(mat.rows, mat.cols, lambda i, j: sympy.ratsimp(mat[i, j]))
+    return sympy.Matrix(mat.rows, mat.cols, lambda i, j: sympy.ratsimp(mat[i, j]))
 
 #print "myrotate"
 myrotate = rotate(2 * sympy.pi / 5)
@@ -61,17 +61,17 @@ m = sympy.Symbol("m")
 #print
 
 #print "mynorthvertex"
-mynorthvertex = sympy.matrices.Matrix([0, m, 0, 1])
+mynorthvertex = sympy.Matrix([0, m, 0, 1])
 #print mynorthvertex
 #print
 
 #print "mywestvertex"
-mywestvertex = sympy.matrices.Matrix([-m, 0, 0, 1])
+mywestvertex = sympy.Matrix([-m, 0, 0, 1])
 #print mywestvertex
 #print
 
 #print "myeastvertex"
-myeastvertex = sympy.matrices.Matrix([m, 0, 0, 1])
+myeastvertex = sympy.Matrix([m, 0, 0, 1])
 #print myeastvertex
 #print
 
