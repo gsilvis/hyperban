@@ -4,15 +4,18 @@ CFLAGS += -g -O2
 LDFLAGS = $(CFLAGS) -lm
 
 EMCC_FLAGS = --js-library cairo.js -s EXPORTED_FUNCTIONS="['_draw_board','_load_board','_do_keypress']"
-EMCC_FLAGS += --preload-file levels/easy.txt
+EMCC_FLAGS += --preload-file levels
 
 CFILES = renderer.c $(wildcard gui/*.c) $(wildcard graph/*.c)
 OFILES = $(patsubst %.c, %.o, $(CFILES))
 
-all: renderer.js
+all: renderer.js levels.json
 
 renderer.js: $(OFILES) cairo.js
 	emcc $(EMCC_FLAGS) -o $@ $(filter-out %.js, $^) $(LDFLAGS)
+
+levels.json: $(wildcard levels/*.txt)
+	ls levels/*.txt | jq -Rs 'split("\n") | .[0:-1]' > $@
 
 %.o : %.c
 	emcc -c -o $@ $^ $(CFLAGS)

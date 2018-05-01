@@ -33,7 +33,7 @@
 static Board *theboard;
 
 int load_board(const char *fname) {
-  FILE *in = fopen("levels/easy.txt", "r");
+  FILE *in = fopen(fname, "r");
   if (in == NULL) return -1;
 
   SavedTile *tiles;
