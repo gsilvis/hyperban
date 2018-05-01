@@ -1,69 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script>
-
-document.addEventListener("DOMContentLoaded", function() {
-fetch("levels.json").then(function(response) {
-  return response.json();
-}).then(function(x) {
-
-   console.log(x);
-
-  x.forEach(function(l) {
-    var e = document.createElement("option");
-    e.value = l;
-    e.innerText = l;
-    level.appendChild(e);
-  });
-
-  go.disabled = false;
-});
-
-
-go.onclick = function() {
-  StartLevel(level.value);
-}
-
-console.log("huh!");
-
-});
-
-  var Module = {
-    onRuntimeInitialized: function() {
-      var load = Module.cwrap('load_board', 'number', ['string']);
-      var _draw = Module.cwrap('draw_board', 'number', ['number', 'number', 'number']);
-      var keypress = Module.cwrap("do_keypress", "number", ["number"]);
-
-      status.innerText = "Ready...";
-
-      StartLevel = function(level) {
-        console.log(load(level));
-        CTX = document.getElementById("canvas").getContext("2d");
-        var draw = function() {
-          CTX.save();
-          _draw(0, 512, 512);
-          CTX.restore();
-        };
-
-        draw();
-        document.addEventListener("keydown", function(event) {
-            if(keypress(event.keyCode)) { draw(); }
-        });
-      }
-    }
-  };
-</script>
-<script src="renderer.js"></script>
 </head>
-
 <body>
-<p id=status>Initializing....</p>
 <select id=level></select>
 <br/>
 <input type=button id=go value="Load!" disabled>
 <br/>
 <canvas id="canvas" width="512" height="512">
 </canvas>
+<script src="glue.js"></script>
+<script src="renderer.js"></script>
 </body>
 </html>
