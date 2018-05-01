@@ -43,8 +43,16 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
     };
 
     document.addEventListener("keydown", function(event) {
-        if (h.keypress(event.keyCode)) {
+        var code = h.keypress(event.keyCode);
+         switch(code) {
+ case 0:
+ default:
+  return;
+ case 1:
             Draw();
+ return;
+case 2:
+  serial.innerText = FS.readFile("/tmp_board.txt", {"encoding":"utf8"});
         }
     });
 

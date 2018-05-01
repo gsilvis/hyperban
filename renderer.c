@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "gui/widgets.h"
 #include "renderer.h"
@@ -29,6 +30,7 @@
 #include "graph/sokoban.h"
 #include "graph/board.h"
 #include "graph/generator.h"
+#include "graph/serialize.h"
 
 static Board *theboard;
 
@@ -116,13 +118,15 @@ int do_keypress(int keyCode) {
       build_wall_in(opts->board->graph->adjacent);
     }
     break;
-  case KEY_SAVE:
-    if (opts->editing) {
-      FILE *f = fopen(opts->board->filename, "w");
-      serialize_board(opts->board, f);
-      fclose(f);
-    }
-    break;
+*/
+
+  case KEY_SAVE: {
+    FILE *f = fopen("tmp_board.txt", "w");
+    serialize_board(theboard, f);
+    fclose(f);
+    return 2;
+ }
+/*
   case KEY_HELP:
     toggle_help(opts);
     return FALSE;
