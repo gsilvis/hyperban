@@ -25,12 +25,23 @@
 
 #define RENDERER_BORDER 10
 
+enum EditAction {
+  MAKE_FLOOR = 0,
+  MAKE_WALL = 1,
+  ROT_LEFT = 2,
+  ROT_RIGHT = 3,
+  MAKE_BOX = 4,
+  DELETE_AGENT = 5,
+  MAKE_TARGET = 6,
+};
+
 Board *js_load_board(const char *fname);
 Graph* js_get_pos(Board *board);
 void js_draw_graph(Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame);
 void js_dump_board(Board *board);
 int js_do_move(Board *board, Move m);
 Move js_undo_move(Board *board);
+void js_edit_board(Board *board, enum EditAction action);
 
 
 #endif /* __HYPERBAN_RENDERER_H */

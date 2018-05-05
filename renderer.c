@@ -66,3 +66,39 @@ int js_do_move(Board *board, Move m) {
 Move js_undo_move(Board *board) {
   return unperform_move(board);
 }
+
+void js_edit_board(Board *board, enum EditAction action) {
+  switch(action) {
+  case MAKE_FLOOR:
+    board->graph->adjacent->tile->tile_type = TILE_TYPE_SPACE;
+    build_wall_in(board->graph->adjacent);
+    return;
+  case MAKE_WALL:
+    board->graph->adjacent->tile->tile_type = TILE_TYPE_WALL;
+    return;
+  case ROT_LEFT:
+    board->graph = ROTATE_L(board->graph);
+    return;
+  case ROT_RIGHT:
+    board->graph = board->graph->rotate_r;
+    return;
+  case MAKE_BOX:
+    if (board->graph->adjacent->tile->agent != AGENT_BOX) {
+      board->graph->adjacent->tile->tile_type = TILE_TYPE_SPACE;
+      build_wall_in(board->graph->adjacent);
+      board->graph->adjacent->tile->agent = AGENT_BOX;
+      board->unsolved++;
+    }
+    return;
+  case DELETE_AGENT:
+    if (board->graph->adjacent->tile->agent == AGENT_BOX) {
+      board->unsolved--;
+    }
+    board->graph->adjacent->tile->agent = AGENT_NONE;
+    return;
+  case MAKE_TARGET:
+    board->graph->adjacent->tile->tile_type = TILE_TYPE_TARGET;
+    build_wall_in(board->graph->adjacent);
+    return;
+  }
+}

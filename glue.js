@@ -30,6 +30,17 @@ var UnMoveToMove = {
     'r': Move.LEFT,
 };
 
+// Must match code in renderer.h
+var EditAction = {
+    MAKE_FLOOR: 0,
+    MAKE_WALL: 1,
+    ROT_LEFT: 2,
+    ROT_RIGHT: 3,
+    MAKE_BOX: 4,
+    DELETE_AGENT: 5,
+    MAKE_TARGET: 6,
+};
+
 function GetLevels() {
     return fetch("levels.json").then(function(response) {
         return response.json();
@@ -58,6 +69,7 @@ var Hooks = new Promise(function(resolve, reject) {
             move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
             unmove: Module.cwrap('js_undo_move', 'number', ['number']),
             get_pos: Module.cwrap('js_get_pos', 'number', ['number']),
+            edit: Module.cwrap('js_edit_board', null, ['number', 'number']),
         });
     };
 });
@@ -99,7 +111,8 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
 
     document.addEventListener("keydown", function(event) {
         var m = null,
-            mr = null;
+            mr = null,
+            ea = null;
         var undo = false;
         switch (event.keyCode) {
             case 87: // W
@@ -120,6 +133,31 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
             case 77: // M
                 editing = !editing;
                 break;
+
+            case 81: // Q
+                ea = EditAction.ROT_LEFT;
+                break;
+            case 69: // E
+                ea = EditAction.ROT_RIGHT;
+                break;
+            case 66: // B
+                ea = EditAction.MAKE_BOX;
+                break;
+            case 84: // T
+                ea = EditAction.MAKE_TARGET;
+                break;
+            case 70: // F
+                ea = EditAction.MAKE_FLOOR;
+                break;
+            case 82: // R
+                ea = EditAction.DELETE_AGENT;
+                break;
+            case 86: // V
+                ea = EditAction.MAKE_WALL;
+                break;
+
+
+
         }
 
         var startPos = h.get_pos(board);
@@ -129,6 +167,10 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
             m = UnMoveToMove[String.fromCharCode(t)];
         } else if (m !== null) {
             mr = h.move(board, m);
+        } else if (ea !== null) {
+            h.edit(board, ea);
+            DrawDefault();
+            return;
         } else {
             DrawDefault();
             return;
