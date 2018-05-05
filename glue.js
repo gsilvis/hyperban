@@ -92,6 +92,8 @@ if (m === null) return;
 
 var startPos = h.get_pos(board);
 var mr = h.move(board, m);
+        h.dump_board(board);
+        serial.innerText = FS.readFile("/tmp_board.txt", {"encoding":"utf8"});
 
 if (mr === MoveResult.BAD) return;
 
