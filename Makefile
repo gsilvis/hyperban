@@ -1,6 +1,7 @@
 CFLAGS = -Wall -Wextra -std=gnu99
 CFLAGS += -Wno-unused-parameter -Wno-abi
 CFLAGS += -g -O2
+#CFLAGS += --closure 1 -O2
 LDFLAGS = $(CFLAGS) -lm
 
 EMCC_FLAGS = --js-library cairo.js -s EXPORTED_FUNCTIONS="['_js_draw_graph','_js_get_pos','_js_load_board','_js_dump_board','_js_do_move','_js_undo_move']"
