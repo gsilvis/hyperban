@@ -26,9 +26,10 @@
 #define RENDERER_BORDER 10
 
 Board *js_load_board(const char *fname);
-void js_draw_board(Board *board, double width, double height, HyperbolicProjection p, Move m, double frame);
+Graph* js_get_pos(Board *board);
+void js_draw_graph(Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame);
 void js_dump_board(Board *board);
-void js_do_move(Board *board, Move m);
+int js_do_move(Board *board, Move m);
 
 
 #endif /* __HYPERBAN_RENDERER_H */

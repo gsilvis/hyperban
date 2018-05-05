@@ -45,8 +45,12 @@ Board *js_load_board(const char *fname) {
   return board_assemble_full(tiles, options);
 }
 
-void js_draw_board(Board *board, double width, double height, HyperbolicProjection p, Move m, double frame) {
-  renderer_draw(NULL, width, height, board->graph, p, m, frame);
+Graph* js_get_pos(Board *board) {
+  return board->graph;
+}
+
+void js_draw_graph(Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame) {
+  renderer_draw(NULL, width, height, graph, p, m, frame);
 }
 
 void js_dump_board(Board *board) {
@@ -55,6 +59,6 @@ void js_dump_board(Board *board) {
   fclose(f);
 }
 
-void js_do_move(Board *board, Move m) {
-  perform_move(board, m);
+int js_do_move(Board *board, Move m) {
+  return perform_move(board, m);
 }

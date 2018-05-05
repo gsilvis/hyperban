@@ -3,7 +3,7 @@ CFLAGS += -Wno-unused-parameter -Wno-abi
 CFLAGS += -g -O2
 LDFLAGS = $(CFLAGS) -lm
 
-EMCC_FLAGS = --js-library cairo.js -s EXPORTED_FUNCTIONS="['_js_draw_board','_js_load_board','_js_dump_board','_js_do_move']"
+EMCC_FLAGS = --js-library cairo.js -s EXPORTED_FUNCTIONS="['_js_draw_graph','_js_get_pos','_js_load_board','_js_dump_board','_js_do_move']"
 EMCC_FLAGS += --preload-file levels
 
 CFILES = renderer.c $(wildcard gui/*.c) $(wildcard graph/*.c)

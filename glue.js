@@ -1,6 +1,7 @@
 var WIDTH = 512;
 var HEIGHT = 512;
 var PROJECTION = 1; // Poincare
+var ANIM_TIME = 200; // MS
 
 // Must match 'enum' in graph/types.h
 var Move = {
@@ -8,6 +9,13 @@ var Move = {
   RIGHT: 1,
   DOWN: 2,
   LEFT: 3,
+};
+
+// Must match enum in graph/sokoban.h
+var MoveResult = {
+  BAD: -1,
+  OK: 0,
+  PUSH: 1,
 };
 
 function GetLevels() {
@@ -33,9 +41,10 @@ var Hooks = new Promise(function(resolve, reject) {
     Module.onRuntimeInitialized = function() {
         resolve({
             load: Module.cwrap('js_load_board', 'number', ['string']),
-            draw: Module.cwrap('js_draw_board', 'number', ['number', 'number', 'number', 'number', 'number', 'number']),
+            draw: Module.cwrap('js_draw_graph', 'number', ['number', 'number', 'number', 'number', 'number', 'number']),
             dump_board: Module.cwrap('js_dump_board', null, ['number']),
-            move: Module.cwrap('js_do_move', null, ['number', 'number']),
+            move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
+            get_pos: Module.cwrap('js_get_pos', 'number', ['number']),
         });
     };
 });
@@ -48,7 +57,8 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
 
     var Draw = function() {
         CTX.save();
-        h.draw(board, WIDTH, HEIGHT, PROJECTION, 0, 0);
+        var pos = h.get_pos(board);
+        h.draw(pos, WIDTH, HEIGHT, PROJECTION, 0, 0);
         CTX.restore();
 
         h.dump_board(board);
@@ -62,22 +72,44 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
     };
 
     document.addEventListener("keydown", function(event) {
+var m = null;
 switch(event.keyCode) {
 case 87: // W
-  h.move(board, Move.UP);
+  m = Move.UP;
   break;
 case 65: // A
-  h.move(board, Move.LEFT);
+  m = Move.LEFT;
   break;
 case 83: // S
-  h.move(board, Move.DOWN);
+  m = Move.DOWN;
   break;
 case 68: // D
-  h.move(board, Move.RIGHT);
+  m = Move.RIGHT;
   break;
 }
 
-Draw();
+if (m === null) return;
+
+var startPos = h.get_pos(board);
+var mr = h.move(board, m);
+
+if (mr === MoveResult.BAD) return;
+
+var start = null;
+
+function step(timestamp) {
+  if (!start) start = timestamp;
+  var progress = Math.min((timestamp - start) / ANIM_TIME, 1);
+  CTX.save();
+  h.draw(startPos, WIDTH, HEIGHT, PROJECTION, m, progress);
+  CTX.restore();
+  if (progress < 1) 
+    window.requestAnimationFrame(step);
+}
+
+window.requestAnimationFrame(step);
+
+
     });
 
     go.disabled = false;
