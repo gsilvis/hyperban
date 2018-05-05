@@ -62,3 +62,7 @@ void js_dump_board(Board *board) {
 int js_do_move(Board *board, Move m) {
   return perform_move(board, m);
 }
+
+Move js_undo_move(Board *board) {
+  return unperform_move(board);
+}

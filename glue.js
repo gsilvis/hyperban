@@ -18,6 +18,18 @@ var MoveResult = {
   PUSH: 1,
 };
 
+// Must match code in graph/sokoban.h
+var UnMoveToMove = {
+  'D': Move.UP,
+  'd': Move.UP,
+  'L': Move.RIGHT,
+  'l': Move.RIGHT,
+  'U': Move.DOWN,
+  'u': Move.DOWN,
+  'R': Move.LEFT,
+  'r': Move.LEFT,
+};
+
 function GetLevels() {
     return fetch("levels.json").then(function(response) {
         return response.json();
@@ -44,6 +56,7 @@ var Hooks = new Promise(function(resolve, reject) {
             draw: Module.cwrap('js_draw_graph', 'number', ['number', 'number', 'number', 'number', 'number', 'number']),
             dump_board: Module.cwrap('js_dump_board', null, ['number']),
             move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
+            unmove: Module.cwrap('js_undo_move', 'number', ['number']),
             get_pos: Module.cwrap('js_get_pos', 'number', ['number']),
         });
     };
@@ -72,7 +85,8 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
     };
 
     document.addEventListener("keydown", function(event) {
-var m = null;
+var m = null, mr = null;
+var undo = false;
 switch(event.keyCode) {
 case 87: // W
   m = Move.UP;
@@ -86,16 +100,28 @@ case 83: // S
 case 68: // D
   m = Move.RIGHT;
   break;
+case 85: // U
+  undo = true;
+  break;
 }
 
-if (m === null) return;
-
 var startPos = h.get_pos(board);
-var mr = h.move(board, m);
-        h.dump_board(board);
-        serial.innerText = FS.readFile("/tmp_board.txt", {"encoding":"utf8"});
+if (undo === true) {
+  var t = h.unmove(board);
+  console.log(t);
+  mr = (m === 0)?MoveResult.BAD:MoveResult.OK;
+  m = UnMoveToMove[String.fromCharCode(t)];
+  console.log(m);
+} else if (m !== null) {
+  mr = h.move(board, m);
+} else {
+  return;
+}
 
 if (mr === MoveResult.BAD) return;
+
+h.dump_board(board);
+serial.innerText = FS.readFile("/tmp_board.txt", {"encoding":"utf8"});
 
 var start = null;
 
@@ -105,7 +131,7 @@ function step(timestamp) {
   CTX.save();
   h.draw(startPos, WIDTH, HEIGHT, PROJECTION, m, progress);
   CTX.restore();
-  if (progress < 1) 
+  if (progress < 1)
     window.requestAnimationFrame(step);
 }
 
