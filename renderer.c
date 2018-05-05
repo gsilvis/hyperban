@@ -67,6 +67,7 @@ Move js_undo_move(Board *board) {
   return unperform_move(board);
 }
 
+
 void js_edit_board(Board *board, enum EditAction action) {
   switch(action) {
   case MAKE_FLOOR:
@@ -101,4 +102,12 @@ void js_edit_board(Board *board, enum EditAction action) {
     build_wall_in(board->graph->adjacent);
     return;
   }
+}
+
+int js_get_unsolved(Board *board) {
+  return board->unsolved;
+}
+
+int js_get_moves(Board *board) {
+  return board->number_moves;
 }

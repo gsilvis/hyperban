@@ -42,6 +42,8 @@ void js_dump_board(Board *board);
 int js_do_move(Board *board, Move m);
 Move js_undo_move(Board *board);
 void js_edit_board(Board *board, enum EditAction action);
+int js_get_unsolved(Board *board);
+int js_get_moves(Board *board);
 
 
 #endif /* __HYPERBAN_RENDERER_H */

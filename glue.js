@@ -70,6 +70,8 @@ var Hooks = new Promise(function(resolve, reject) {
             unmove: Module.cwrap('js_undo_move', 'number', ['number']),
             get_pos: Module.cwrap('js_get_pos', 'number', ['number']),
             edit: Module.cwrap('js_edit_board', null, ['number', 'number']),
+            get_unsolved: Module.cwrap('js_get_unsolved', 'number', ['number']),
+            get_moves: Module.cwrap('js_get_moves', 'number', ['number']),
         });
     };
 });
@@ -80,6 +82,8 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
     CTX = document.getElementById("canvas").getContext("2d");
 
     var modeLabel = document.getElementById("ModeIndicator");
+    var unsolved = document.getElementById("unsolved_num"),
+moves = document.getElementById("moves_num");
 
     var board = null;
     var editing = false;
@@ -95,6 +99,8 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
         });
 
         modeLabel.innerText = editing ? "Editing" : "Playing";
+        moves.innerText = h.get_moves(board);
+        unsolved.innerText = h.get_unsolved(board);
     };
 
     var DrawDefault = function() {
@@ -155,8 +161,6 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
             case 86: // V
                 ea = EditAction.MAKE_WALL;
                 break;
-
-
 
         }
 
