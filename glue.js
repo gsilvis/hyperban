@@ -64,26 +64,37 @@ var Hooks = new Promise(function(resolve, reject) {
 
 Promise.all([Hooks, LoadLevels()]).then(function(values) {
     var h = values[0];
+    // note this is a global
     CTX = document.getElementById("canvas").getContext("2d");
 
-    var board = null;
+    var modeLabel = document.getElementById("ModeIndicator");
 
-    var Draw = function() {
+    var board = null;
+    var editing = false;
+
+    var Draw = function(pos, move, progress) {
         CTX.save();
-        var pos = h.get_pos(board);
-        h.draw(pos, WIDTH, HEIGHT, PROJECTION, 0, 0);
+        h.draw(pos, WIDTH, HEIGHT, PROJECTION, move, progress);
         CTX.restore();
 
         h.dump_board(board);
         serial.innerText = FS.readFile("/tmp_board.txt", {
             "encoding": "utf8"
         });
+
+        modeLabel.innerText = editing ? "Editing" : "Playing";
     };
+
+    var DrawDefault = function() {
+        var pos = h.get_pos(board);
+        Draw(pos, 0, 0);
+    };
+
 
     var StartLevel = function(level) {
         board = h.load(level);
-        console.log(board);
-        Draw();
+        editing = false;
+        DrawDefault();
     };
 
     document.addEventListener("keydown", function(event) {
@@ -106,22 +117,27 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
             case 85: // U
                 undo = true;
                 break;
+            case 77: // M
+                editing = !editing;
+                break;
         }
 
         var startPos = h.get_pos(board);
-        if (undo === true) {
+        if (undo === true && !editing) {
             var t = h.unmove(board);
-            console.log(t);
             mr = (m === 0) ? MoveResult.BAD : MoveResult.OK;
             m = UnMoveToMove[String.fromCharCode(t)];
-            console.log(m);
         } else if (m !== null) {
             mr = h.move(board, m);
         } else {
+            DrawDefault();
             return;
         }
 
-        if (mr === MoveResult.BAD) return;
+        if (mr === MoveResult.BAD) {
+            DrawDefault();
+            return;
+        }
 
         h.dump_board(board);
         serial.innerText = FS.readFile("/tmp_board.txt", {
@@ -133,9 +149,7 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
         function step(timestamp) {
             if (!start) start = timestamp;
             var progress = Math.min((timestamp - start) / ANIM_TIME, 1);
-            CTX.save();
-            h.draw(startPos, WIDTH, HEIGHT, PROJECTION, m, progress);
-            CTX.restore();
+            Draw(startPos, m, progress);
             if (progress < 1)
                 window.requestAnimationFrame(step);
         }
