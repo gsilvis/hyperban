@@ -32,110 +32,29 @@
 #include "graph/generator.h"
 #include "graph/serialize.h"
 
-static Board *theboard;
-
-int load_board(const char *fname) {
+Board *js_load_board(const char *fname) {
   FILE *in = fopen(fname, "r");
-  if (in == NULL) return -1;
+  if (in == NULL) return NULL;
 
   SavedTile *tiles;
   ConfigOption *options;
-  if (level_parse_file(in, &tiles, &options)) return -1;
+  if (level_parse_file(in, &tiles, &options)) return NULL;
 
   fclose(in);
 
-  theboard = board_assemble_full(tiles, options);
-
-  return 0;
+  return board_assemble_full(tiles, options);
 }
 
-void draw_board(cairo_t *cr, double width, double height) {
-  renderer_draw(cr, width, height, theboard->graph, DEFAULT_PROJECTION, 0, 0);
+void js_draw_board(Board *board, double width, double height, HyperbolicProjection p, Move m, double frame) {
+  renderer_draw(NULL, width, height, board->graph, p, m, frame);
 }
 
+void js_dump_board(Board *board) {
+  FILE *f = fopen("tmp_board.txt", "w");
+  serialize_board(board, f);
+  fclose(f);
+}
 
-int do_keypress(int keyCode) {
-  Move m = -1;
-
-  switch(keyCode) {
-  case KEY_UP:
-    m = MOVE_UP;
-    break;
-  case KEY_DOWN:
-    m = MOVE_DOWN;
-    break;
-  case KEY_LEFT:
-    m = MOVE_LEFT;
-    break;
-  case KEY_RIGHT:
-    m = MOVE_RIGHT;
-    break;
-/*
-  case KEY_UNDO:
-    if (!opts->editing)
-      m = -2;
-    break;
-  case KEY_MAKE_FLOOR:
-    if (opts->editing) {
-      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_SPACE;
-      build_wall_in(opts->board->graph->adjacent);
-    }
-    break;
-  case KEY_MAKE_WALL:
-    if (opts->editing) {
-      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_WALL;
-    }
-    break;
-  case KEY_ROT_LEFT:
-    if (opts->editing)
-      opts->board->graph = ROTATE_L(opts->board->graph);
-    break;
-  case KEY_ROT_RIGHT:
-    if (opts->editing)
-      opts->board->graph = opts->board->graph->rotate_r;
-    break;
-  case KEY_MAKE_BOX:
-    if (opts->editing) {
-      if (opts->board->graph->adjacent->tile->agent != AGENT_BOX) {
-        opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_SPACE;
-        build_wall_in(opts->board->graph->adjacent);
-        opts->board->graph->adjacent->tile->agent = AGENT_BOX;
-        opts->board->unsolved++;
-      }
-    }
-    break;
-  case KEY_DELETE_AGENT:
-    if (opts->editing) {
-      if (opts->board->graph->adjacent->tile->agent == AGENT_BOX) {
-        opts->board->unsolved--;
-      }
-      opts->board->graph->adjacent->tile->agent = AGENT_NONE;
-    }
-    break;
-  case KEY_MAKE_TARGET:
-    if (opts->editing) {
-      opts->board->graph->adjacent->tile->tile_type = TILE_TYPE_TARGET;
-      build_wall_in(opts->board->graph->adjacent);
-    }
-    break;
-*/
-
-  case KEY_SAVE: {
-    FILE *f = fopen("tmp_board.txt", "w");
-    serialize_board(theboard, f);
-    fclose(f);
-    return 2;
- }
-/*
-  case KEY_HELP:
-    toggle_help(opts);
-    return FALSE;
-*/
-  default:
-    return 0;
-  }
-
-
-  perform_move(theboard, m);
-  return 1;
+void js_do_move(Board *board, Move m) {
+  perform_move(board, m);
 }

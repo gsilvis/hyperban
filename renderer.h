@@ -23,43 +23,12 @@
 
 #include "gui/cairo.h"
 
-#define KEY_UP 87
-#define KEY_RIGHT 68
-#define KEY_LEFT 65
-#define KEY_DOWN 83
-#define KEY_UNDO GDK_KEY_BackSpace
-
-#define KEY_HELP GDK_KEY_h
-
-/* Editing Keys */
-#define KEY_MAKE_FLOOR GDK_KEY_f
-#define KEY_MAKE_WALL GDK_KEY_w
-#define KEY_MAKE_BOX GDK_KEY_b
-#define KEY_MAKE_TARGET GDK_KEY_t
-#define KEY_DELETE_AGENT GDK_KEY_d
-#define KEY_ROT_LEFT GDK_KEY_comma
-#define KEY_ROT_RIGHT GDK_KEY_period
-#define KEY_SAVE 76
-
 #define RENDERER_BORDER 10
 
-#define RENDERER_ANIMATION_TIME 1.0 /* seconds */
+Board *js_load_board(const char *fname);
+void js_draw_board(Board *board, double width, double height, HyperbolicProjection p, Move m, double frame);
+void js_dump_board(Board *board);
+void js_do_move(Board *board, Move m);
 
-#define RENDERER_MAX_FRAME_RATE 30.0 /* fps */
-
-#define RENDERER_INTERP_MODE CAIRO_FILTER_GOOD
-
-#define RENDERER_MIN_WIDTH 240
-#define RENDERER_MIN_HEIGHT 240
-
-#define DEFAULT_ANIMATION TRUE
-
-#define RENDERER_TITLE "Hyperban"
-
-#define BOXES_TEXT "Boxes Left: %d"
-
-#define MOVES_TEXT "Moves Taken: %d"
-
-#define RENDERER_SUMMARY "Hyperban hyperbolic sokoban renderer."
 
 #endif /* __HYPERBAN_RENDERER_H */
