@@ -83,7 +83,7 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
 
     var modeLabel = document.getElementById("ModeIndicator");
     var unsolved = document.getElementById("unsolved_num"),
-moves = document.getElementById("moves_num");
+        moves = document.getElementById("moves_num");
 
     var board = null;
     var editing = false;
@@ -141,25 +141,32 @@ moves = document.getElementById("moves_num");
                 break;
 
             case 81: // Q
-                ea = EditAction.ROT_LEFT;
+                if (editing)
+                    ea = EditAction.ROT_LEFT;
                 break;
             case 69: // E
-                ea = EditAction.ROT_RIGHT;
+                if (editing)
+                    ea = EditAction.ROT_RIGHT;
                 break;
             case 66: // B
-                ea = EditAction.MAKE_BOX;
+                if (editing)
+                    ea = EditAction.MAKE_BOX;
                 break;
             case 84: // T
-                ea = EditAction.MAKE_TARGET;
+                if (editing)
+                    ea = EditAction.MAKE_TARGET;
                 break;
             case 70: // F
-                ea = EditAction.MAKE_FLOOR;
+                if (editing)
+                    ea = EditAction.MAKE_FLOOR;
                 break;
             case 82: // R
-                ea = EditAction.DELETE_AGENT;
+                if (editing)
+                    ea = EditAction.DELETE_AGENT;
                 break;
             case 86: // V
-                ea = EditAction.MAKE_WALL;
+                if (editing)
+                    ea = EditAction.MAKE_WALL;
                 break;
 
         }
