@@ -37,7 +37,7 @@ enum EditAction {
 
 Board *js_load_board(const char *fname);
 Graph* js_get_pos(Board *board);
-void js_draw_graph(Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame);
+void js_draw_graph(cairo_t *cr, Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame);
 void js_dump_board(Board *board);
 int js_do_move(Board *board, Move m);
 Move js_undo_move(Board *board);

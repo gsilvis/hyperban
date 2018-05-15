@@ -98,6 +98,8 @@ void renderer_draw(cairo_t *cr, double width, double height,
   double originx = width / 2;
   double originy = height / 2;
 
+  cairo_move_to(cr, originx + radius, originy);
+
   cairo_arc(cr, originx, originy, radius,
       0, 2 * M_PI);
 

@@ -49,8 +49,8 @@ Graph* js_get_pos(Board *board) {
   return board->graph;
 }
 
-void js_draw_graph(Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame) {
-  renderer_draw(NULL, width, height, graph, p, m, frame);
+void js_draw_graph(cairo_t *cr, Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame) {
+  renderer_draw(cr, width, height, graph, p, m, frame);
 }
 
 void js_dump_board(Board *board) {

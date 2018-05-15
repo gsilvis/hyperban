@@ -64,7 +64,7 @@ var Hooks = new Promise(function(resolve, reject) {
     Module.onRuntimeInitialized = function() {
         resolve({
             load: Module.cwrap('js_load_board', 'number', ['string']),
-            draw: Module.cwrap('js_draw_graph', 'number', ['number', 'number', 'number', 'number', 'number', 'number']),
+            draw: Module.cwrap('js_draw_graph', 'number', ['string', 'number', 'number', 'number', 'number', 'number', 'number']),
             dump_board: Module.cwrap('js_dump_board', null, ['number']),
             move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
             unmove: Module.cwrap('js_undo_move', 'number', ['number']),
@@ -90,7 +90,7 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
 
     var Draw = function(pos, move, progress) {
         CTX.save();
-        h.draw(pos, WIDTH, HEIGHT, PROJECTION, move, progress);
+        h.draw("canvas", pos, WIDTH, HEIGHT, PROJECTION, move, progress);
         CTX.restore();
 
         h.dump_board(board);
