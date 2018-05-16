@@ -39,6 +39,7 @@ Board *js_load_board(const char *fname);
 Graph* js_get_pos(Board *board);
 void js_draw_graph(cairo_t *cr, Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame);
 void js_dump_board(Board *board);
+void js_set_custom_projection(double param);
 int js_do_move(Board *board, Move m);
 Move js_undo_move(Board *board);
 void js_edit_board(Board *board, enum EditAction action);

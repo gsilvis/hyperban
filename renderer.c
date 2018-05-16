@@ -111,3 +111,7 @@ int js_get_unsolved(Board *board) {
 int js_get_moves(Board *board) {
   return board->number_moves;
 }
+
+void js_set_custom_projection(double param) {
+  CUSTOM_PROJECTION_PARAM = param;
+}

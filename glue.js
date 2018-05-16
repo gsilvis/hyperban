@@ -90,6 +90,7 @@ var Hooks = asyncL('/renderer.js').then(function() {
                 edit: Module.cwrap('js_edit_board', null, ['number', 'number']),
                 get_unsolved: Module.cwrap('js_get_unsolved', 'number', ['number']),
                 get_moves: Module.cwrap('js_get_moves', 'number', ['number']),
+		set_custom_projection: Module.cwrap('js_set_custom_projection', null, ['number']),
                 Module: Module,
             });
         });
@@ -112,6 +113,12 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
             DrawDefault();
         };
     })
+
+	var cr = document.getElementById("customrange");
+cr.onchange = function() {
+		h.set_custom_projection(parseFloat(cr.value));
+		DrawDefault();
+}
 
     var board = null;
     var editing = false;
@@ -236,8 +243,6 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
         }
 
         window.requestAnimationFrame(step);
-
-
     });
 
     go.disabled = false;

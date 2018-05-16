@@ -24,8 +24,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "../graph/consts.h"
+
+double CUSTOM_PROJECTION_PARAM = 1.0;
 
 static matrix_el_t minkowski_self_inner_product(r3vector a);
 
@@ -143,7 +146,7 @@ void hyperbolic_translation(r3vector a, r3vector b, r3transform *o) {
 }
 
 r3vector weierstrass2poincare(r3vector a) {
-  r3vector t;
+  r3vector t = a;
   t.els[0] /= (a.els[2] + 1);
   t.els[1] /= (a.els[2] + 1);
   t.els[2] /= (a.els[2] + 1);
@@ -170,6 +173,19 @@ r3vector klein2poincare(r3vector a) {
   matrix_el_t d = sqrt(1 - a.els[0]*a.els[0] - a.els[1]*a.els[1]) + 1.0;
   r3vector t = {{ a.els[0]/d, a.els[1]/d, a.els[2]/d}};
   return t;
+}
+
+r3vector weierstrass2custom(r3vector a) {
+  r3vector t = a;
+  t.els[0] /= (a.els[2] + CUSTOM_PROJECTION_PARAM);
+  t.els[1] /= (a.els[2] + CUSTOM_PROJECTION_PARAM);
+  t.els[2] /= (a.els[2] + CUSTOM_PROJECTION_PARAM);
+  return t;
+}
+
+// Note the duality of weierstrass2klein and weirstrass2poincare
+r3vector klein2custom(r3vector a) {
+  return weierstrass2custom(klein2weierstrass(a));
 }
 
 r3vector poincare2klein(r3vector a) {

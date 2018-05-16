@@ -54,8 +54,11 @@ r3vector apply_transformation(r3vector a, r3transform *b);
 void hyperbolic_translation(r3vector a, r3vector b, r3transform *out);
 
 r3vector klein2poincare(r3vector a);
+r3vector klein2custom(r3vector a);
 
 extern const SquarePoints origin_square;
 SquarePoints *transform_square(SquarePoints *points, r3transform *trans);
+
+extern double CUSTOM_PROJECTION_PARAM;
 
 #endif /* __HYPERBAN_MATRIX_H */

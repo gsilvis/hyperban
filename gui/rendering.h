@@ -24,10 +24,12 @@
 #include "../graph/types.h"
 #include "matrix.h"
 
-#define RENDERING_MAX_DIST 7
+#define RENDERING_MAX_DIST 32
 
 enum hyperbolic_projection_t {
-  PROJECTION_KLEIN,  PROJECTION_POINCARE
+  PROJECTION_KLEIN,
+  PROJECTION_POINCARE,
+  PROJECTION_CUSTOM
 };
 
 #define DEFAULT_PROJECTION PROJECTION_POINCARE

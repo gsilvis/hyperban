@@ -66,6 +66,25 @@ void draw_tile(RendererParams *params, SquarePoints *points,
           midpoints[i].els[1], projected[(i+1)%4].els[0], projected[(i+1)%4].els[1]);
     }
     cairo_close_path(cr);
+  } else if (params->projection == PROJECTION_CUSTOM) {
+    r3vector projected[4] = {
+      klein2custom(points->points[0]),
+      klein2custom(points->points[1]),
+      klein2custom(points->points[2]),
+      klein2custom(points->points[3])
+    };
+    r3vector midpoints[4] = {
+      klein2custom(hyperbolic_midpoint(points->points[0], points->points[1])),
+      klein2custom(hyperbolic_midpoint(points->points[1], points->points[2])),
+      klein2custom(hyperbolic_midpoint(points->points[2], points->points[3])),
+      klein2custom(hyperbolic_midpoint(points->points[3], points->points[0]))
+    };
+    cairo_move_to(cr, projected[0].els[0], projected[0].els[1]);
+    for (size_t i = 0; i < 4; i++) {
+      circle_to(cr, projected[i].els[0], projected[i].els[1], midpoints[i].els[0],
+          midpoints[i].els[1], projected[(i+1)%4].els[0], projected[(i+1)%4].els[1]);
+    }
+    cairo_close_path(cr);
   }
   if (tile->tile_type == TILE_TYPE_SPACE) {
     if (tile->agent == AGENT_BOX)
