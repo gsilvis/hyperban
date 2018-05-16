@@ -41,6 +41,7 @@ void draw_tile(RendererParams *params, SquarePoints *points,
     Tile *tile) {
   cairo_t *cr = params->data;
   if (params->projection == PROJECTION_KLEIN) {
+    cairo_move_to(cr, points->points[0].els[0], points->points[0].els[1]);
     for (size_t i = 0; i < 4; i++) {
       r3vector projected = points->points[i];
       cairo_line_to(cr, projected.els[0], projected.els[1]);

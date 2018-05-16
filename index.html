@@ -12,12 +12,16 @@ You can press 'm' to toggle EDITING mode. In Editing mode, you can modify the ge
 
 The serialized board at the bottom will automatically update as you edit the board.
 </pre>
+<form name="config">
 <select id=level></select>
 <br/>
 <input type=button id=go value="Load!" disabled>
 <br/>
 <em id="ModeIndicator">Loading</em> Mode
 <br/>
+<input name="projection" type="radio" value="1" checked> <label>Poincare projection</label>
+<input name="projection" type="radio" value="0"> <label>Klein projection</label>
+</form>
 <canvas id="canvas" width="512" height="512">
 </canvas>
 <p id="game_status">Moves: <span id="moves_num">...</span> &nbsp;&nbsp; Unsolved Boxes: <span id="unsolved_num">...</span></p>

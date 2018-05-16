@@ -85,6 +85,14 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
     var unsolved = document.getElementById("unsolved_num"),
         moves = document.getElementById("moves_num");
 
+    var projection = document.getElementsByName("projection");
+    projection.forEach(function(x) {
+		x.onchange = function() {
+			PROJECTION = document.forms.config.projection.value | 0;
+			DrawDefault();
+	};
+	})
+
     var board = null;
     var editing = false;
 
