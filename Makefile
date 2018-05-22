@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Wextra -std=gnu99
-CFLAGS += -Wno-unused-parameter -Wno-abi
+CFLAGS += -Wno-unused-parameter -Wno-abi -Wno-unused-function -Wno-unused-const-variable
 #CFLAGS += -g -O2
 CFLAGS += --closure 1 -O3
 LDFLAGS = $(CFLAGS) -lm
@@ -17,8 +17,8 @@ all: renderer.js levels.json
 renderer.js: $(OFILES) module/cairo.js
 	emcc $(EMCC_FLAGS) -o $@ $(filter-out %.js, $^) $(LDFLAGS)
 
-levels.json: $(wildcard levels/*.txt)
-	find levels -name \*.txt | jq -Rs 'split("\n") | .[0:-1]' > $@
+levels.json: $(shell find levels -name \*.txt)
+	echo $^ | jq -Rs 'split(" ") | .[0:-1]' > $@
 
 %.o : %.c
 	emcc -c -o $@ $^ $(CFLAGS)
