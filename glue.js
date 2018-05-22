@@ -213,7 +213,7 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
         var startPos = h.get_pos(board);
         if (undo === true && !editing) {
             var t = h.unmove(board);
-            mr = (m === 0) ? MoveResult.BAD : MoveResult.OK;
+            mr = (t === 0) ? MoveResult.BAD : MoveResult.OK;
             m = UnMoveToMove[String.fromCharCode(t)];
         } else if (m !== null) {
             mr = h.move(board, m);
