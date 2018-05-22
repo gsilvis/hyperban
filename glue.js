@@ -49,6 +49,7 @@ function GetLevels() {
 
 function LoadLevels() {
     return GetLevels().then(function(levels) {
+	levels.sort();
         levels.forEach(function(l) {
             var e = document.createElement("option");
             e.value = l;
@@ -120,7 +121,7 @@ Promise.all([Hooks, LoadLevels()]).then(function(values) {
         DrawDefault();
     };
 
-    cr.onchange = update;
+    cr.onchange = update; cr.oninput = update;
     h.set_custom_projection(parseFloat(cr.value));
 
     var board = null;
