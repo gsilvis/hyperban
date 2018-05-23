@@ -70,4 +70,8 @@ mergeInto(LibraryManager.library, {
         CTX.fillStyle = 'rgb(' + red * 255 + ',' + green * 255 + ',' + blue * 255 + ')';
     },
 
+    cairo_curve_to: function(cr, x1, y1, x2, y2, x3, y3) {
+        var CTX = document.getElementById(Pointer_stringify(cr)).getContext("2d");
+        CTX.bezierCurveTo(x1, y1, x2, y2, x3, y3);
+    },
 });

@@ -28,4 +28,6 @@
 void circle_to(cairo_t *cr, double x1, double y1, double x2, double y2,
     double x3, double y3);
 
+void spline_to(cairo_t *cr, double x[4], double y[4]);
+
 #endif /* __HYPERBAN_CAIRO_HELPER_H */

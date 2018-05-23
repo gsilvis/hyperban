@@ -39,5 +39,7 @@ void cairo_set_line_width (cairo_t *cr, double width);
 
 void cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue);
 
+void cairo_curve_to (cairo_t *cr, double x1, double y1, double x2, double y2, double x3, double y3);
+
 #endif
 

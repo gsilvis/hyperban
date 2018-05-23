@@ -21,7 +21,7 @@
 #ifndef __HYPERBAN_RENDERER_H
 #define __HYPERBAN_RENDERER_H
 
-#include "gui/cairo.h"
+#include "cairo.h"
 
 #define RENDERER_BORDER 10
 

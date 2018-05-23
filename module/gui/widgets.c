@@ -74,15 +74,30 @@ void draw_tile(RendererParams *params, SquarePoints *points,
       klein2custom(points->points[3])
     };
     r3vector midpoints[4] = {
-      klein2custom(hyperbolic_midpoint(points->points[0], points->points[1])),
-      klein2custom(hyperbolic_midpoint(points->points[1], points->points[2])),
-      klein2custom(hyperbolic_midpoint(points->points[2], points->points[3])),
-      klein2custom(hyperbolic_midpoint(points->points[3], points->points[0]))
+      hyperbolic_midpoint(points->points[0], points->points[1]),
+      hyperbolic_midpoint(points->points[1], points->points[2]),
+      hyperbolic_midpoint(points->points[2], points->points[3]),
+      hyperbolic_midpoint(points->points[3], points->points[0])
+    };
+    r3vector midpoints_1[4] = {
+      klein2custom(hyperbolic_midpoint(points->points[0], midpoints[0])),
+      klein2custom(hyperbolic_midpoint(points->points[1], midpoints[1])),
+      klein2custom(hyperbolic_midpoint(points->points[2], midpoints[2])),
+      klein2custom(hyperbolic_midpoint(points->points[3], midpoints[3]))
+    };
+    r3vector midpoints_2[4] = {
+      klein2custom(hyperbolic_midpoint(midpoints[0], points->points[1])),
+      klein2custom(hyperbolic_midpoint(midpoints[1], points->points[2])),
+      klein2custom(hyperbolic_midpoint(midpoints[2], points->points[3])),
+      klein2custom(hyperbolic_midpoint(midpoints[3], points->points[0])),
     };
     cairo_move_to(cr, projected[0].els[0], projected[0].els[1]);
+
     for (size_t i = 0; i < 4; i++) {
-      circle_to(cr, projected[i].els[0], projected[i].els[1], midpoints[i].els[0],
-          midpoints[i].els[1], projected[(i+1)%4].els[0], projected[(i+1)%4].els[1]);
+      double x[4] = {projected[i].els[0], midpoints_1[i].els[0], midpoints_2[i].els[0], projected[(i+1)%4].els[0]};
+      double y[4] = {projected[i].els[1], midpoints_1[i].els[1], midpoints_2[i].els[1], projected[(i+1)%4].els[1]};
+
+      spline_to(cr, x, y);
     }
     cairo_close_path(cr);
   }

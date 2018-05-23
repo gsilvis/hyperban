@@ -2,6 +2,7 @@ CFLAGS = -Wall -Wextra -std=gnu99
 CFLAGS += -Wno-unused-parameter -Wno-abi -Wno-unused-function -Wno-unused-const-variable
 #CFLAGS += -g -O2
 CFLAGS += --closure 1 -O3
+CFLAGS += -Imodule
 
 LDFLAGS = $(CFLAGS)
 LDFLAGS += -lm
