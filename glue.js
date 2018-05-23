@@ -58,14 +58,15 @@ function ListDirRecursive(Module, directory) {
   return result;
 }
 
-function LoadLevels(Module) {
+function LoadLevels(Module, parent) {
+    parent.innerText = '';
     var levels = ListDirRecursive(Module, '/levels');
     levels.sort();
     levels.forEach(function(l) {
             var e = document.createElement("option");
             e.value = l;
             e.innerText = l;
-            level.appendChild(e);
+            parent.appendChild(e);
     });
 }
 
@@ -102,6 +103,7 @@ var Hooks = asyncL('/renderer.js').then(function() {
                 get_unsolved: Module.cwrap('js_get_unsolved', 'number', ['number']),
                 get_moves: Module.cwrap('js_get_moves', 'number', ['number']),
                 set_custom_projection: Module.cwrap('js_set_custom_projection', null, ['number']),
+                init: Module.cwrap('js_init'),
                 Module: Module,
             });
         });
@@ -109,7 +111,8 @@ var Hooks = asyncL('/renderer.js').then(function() {
 });
 
 Hooks.then(function(h) {
-    LoadLevels(h.Module);
+    LoadLevels(h.Module, document.getElementById('level'));
+
     // note this is a global
     CTX = document.getElementById("canvas").getContext("2d");
 
@@ -136,6 +139,8 @@ Hooks.then(function(h) {
 
     var board = null;
     var editing = false;
+
+    h.init();
 
     var Draw = function(pos, move, progress) {
         CTX.save();

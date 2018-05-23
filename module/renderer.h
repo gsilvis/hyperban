@@ -35,6 +35,7 @@ enum EditAction {
   MAKE_TARGET = 6,
 };
 
+void js_init(void);
 Board *js_load_board(const char *fname);
 Graph* js_get_pos(Board *board);
 void js_draw_graph(cairo_t *cr, Graph *graph, double width, double height, HyperbolicProjection p, Move m, double frame);

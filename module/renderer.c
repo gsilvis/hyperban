@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <emscripten.h>
 
 #include "gui/widgets.h"
 #include "renderer.h"
@@ -31,6 +32,18 @@
 #include "graph/board.h"
 #include "graph/generator.h"
 #include "graph/serialize.h"
+
+// This method exists because the closure compiler
+// will mess with the IDBFS object, even if exported
+// So just call it *inside* the closure compiled code
+void js_init(void) {
+  EM_ASM({
+    FS.mkdir('/IDBFS');
+    FS.mount(IDBFS, {}, '/IDBFS');
+    FS.mkdir('/IDBFS/levels');
+    FS.symlink('/IDBFS/levels', '/levels/local');
+  });
+}
 
 Board *js_load_board(const char *fname) {
   FILE *in = fopen(fname, "r");
