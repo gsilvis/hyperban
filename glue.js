@@ -41,21 +41,31 @@ var EditAction = {
     MAKE_TARGET: 6,
 };
 
-function GetLevels() {
-    return fetch("levels.json").then(function(response) {
-        return response.json();
-    });
+function ListDirRecursive(Module, directory) {
+  var result = [];
+  console.log("Dir: "+directory);
+  Module.FS.readdir(directory).forEach(function(f) {
+    if (f == "." || f == "..") return;
+    var p = directory + '/' + f;
+    console.log("Contains: " + p + " " + f);
+    var s = Module.FS.stat(p);
+    if (!Module.FS.isFile(s.mode)) {
+       result = result.concat(ListDirRecursive(Module, p));
+    } else {
+       result.push(p);
+     }
+  });
+  return result;
 }
 
-function LoadLevels() {
-    return GetLevels().then(function(levels) {
-	levels.sort();
-        levels.forEach(function(l) {
+function LoadLevels(Module) {
+    var levels = ListDirRecursive(Module, '/levels');
+    levels.sort();
+    levels.forEach(function(l) {
             var e = document.createElement("option");
             e.value = l;
             e.innerText = l;
             level.appendChild(e);
-        });
     });
 }
 
@@ -98,8 +108,8 @@ var Hooks = asyncL('/renderer.js').then(function() {
     });
 });
 
-Promise.all([Hooks, LoadLevels()]).then(function(values) {
-    var h = values[0];
+Hooks.then(function(h) {
+    LoadLevels(h.Module);
     // note this is a global
     CTX = document.getElementById("canvas").getContext("2d");
 
