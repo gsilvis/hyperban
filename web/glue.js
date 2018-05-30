@@ -70,45 +70,37 @@ function LoadLevels(Module, parent) {
     });
 }
 
-// https://stackoverflow.com/questions/12820953/asynchronous-script-loading-callback
-function asyncL(u) {
-    return new Promise(function(resolve, reject) {
-        var d = document,
-            t = 'script',
-            o = d.createElement(t),
-            s = d.getElementsByTagName(t)[0];
-        o.src = u;
-        o.addEventListener('load', function() {
-            o.remove();
-            resolve();
-        });
-        s.parentNode.insertBefore(o, s);
-    });
-}
+var Hooks = import('dist/renderer.js').then(function(Hyperban) {
+	console.log(Hyperban);
+	return new Promise(function(resolve) {
+		Hyperban.default().then(function(Module) {
+			resolve({
+		                load: Module.cwrap('js_load_board', 'number', ['string']),
+		                draw: Module.cwrap('js_draw_graph', 'number', ['string', 'number', 'number', 'number', 'number', 'number', 'number']),
+		                dump_board: Module.cwrap('js_dump_board', null, ['number']),
+		                move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
+		                unmove: Module.cwrap('js_undo_move', 'number', ['number']),
+		                get_pos: Module.cwrap('js_get_pos', 'number', ['number']),
+		                edit: Module.cwrap('js_edit_board', null, ['number', 'number']),
+		                get_unsolved: Module.cwrap('js_get_unsolved', 'number', ['number']),
+		                get_moves: Module.cwrap('js_get_moves', 'number', ['number']),
+		                set_custom_projection: Module.cwrap('js_set_custom_projection', null, ['number']),
+		                init: Module.cwrap('js_init'),
+		                Module: Module,
+			});
+		});
 
-
-
-var Hooks = asyncL('/renderer.js').then(function() {
-    return new Promise(function(resolve) {
-        // note emscripten modules are not true promises https://github.com/kripken/emscripten/issues/5820
-        Hyperban().then(function(Module) {
-            resolve({
-                load: Module.cwrap('js_load_board', 'number', ['string']),
-                draw: Module.cwrap('js_draw_graph', 'number', ['string', 'number', 'number', 'number', 'number', 'number', 'number']),
-                dump_board: Module.cwrap('js_dump_board', null, ['number']),
-                move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
-                unmove: Module.cwrap('js_undo_move', 'number', ['number']),
-                get_pos: Module.cwrap('js_get_pos', 'number', ['number']),
-                edit: Module.cwrap('js_edit_board', null, ['number', 'number']),
-                get_unsolved: Module.cwrap('js_get_unsolved', 'number', ['number']),
-                get_moves: Module.cwrap('js_get_moves', 'number', ['number']),
-                set_custom_projection: Module.cwrap('js_set_custom_projection', null, ['number']),
-                init: Module.cwrap('js_init'),
-                Module: Module,
-            });
-        });
-    });
+	});
 });
+/*
+	console.log("Loaded renderer");
+	return new Promise(function(resolve) {
+		console.log("Hyperban!");
+	Hyperban().then(function() {
+	});
+});
+});
+*/
 
 Hooks.then(function(h) {
     LoadLevels(h.Module, document.getElementById('level'));

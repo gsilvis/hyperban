@@ -1,2 +1,3 @@
 *.[ao]
-renderer
+node_modules
+dist
