@@ -1,6 +1,6 @@
 # Set to DEBUG or RELEASE
-MODE = DEBUG
-
+#MODE = DEBUG
+MODE = RELEASE
 
 CFLAGS = -Wall -Wextra -std=gnu99
 CFLAGS += -Wno-unused-parameter -Wno-abi -Wno-unused-function -Wno-unused-const-variable
