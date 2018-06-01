@@ -29,7 +29,8 @@ EMCC_FLAGS += -s MODULARIZE=1
 EMCC_FLAGS += -s 'ENVIRONMENT="web"'
 EMCC_FLAGS += -s EXPORT_NAME="'Hyperban'"
 EMCC_FLAGS += -s WASM=0
-EMCC_FLAGS += -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS","cwrap"]'
+EMCC_FLAGS += -s --pre-js module/cairo_pre.js
+EMCC_FLAGS += -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS","cwrap","_malloc","stringToUTF8","lengthBytesUTF8"]'
 
 ifeq ($(MODE),DEBUG)
 	WEBPACK_FLAGS += --mode=development
@@ -56,7 +57,7 @@ build-module: web/renderer.js
 build-web: dist/hyperban.js dist/index.html dist/renderer.data dist/renderer.js.mem
 
 run-web: build-web
-	cd dist; python -m SimpleHTTPServer 8080
+	./node_modules/.bin/http-server ./dist
 
 dist/index.html: web/index.html
 	cp $< $@
@@ -67,7 +68,7 @@ node_modules:
 dist/hyperban.js: node_modules webpack.config.js $(JSFILES)
 	./node_modules/.bin/webpack $(WEBPACK_FLAGS)
 
-web/renderer.js web/renderer.data web/renderer.js.mem: $(OFILES) module/cairo.js
+web/renderer.js web/renderer.data web/renderer.js.mem: $(OFILES) module/cairo.js module/cairo_pre.js
 	emcc $(EMCC_FLAGS) -o $@ $(filter %.o, $^) $(LDFLAGS)
 
 dist/renderer.data: web/renderer.data

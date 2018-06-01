@@ -65,7 +65,7 @@ function GetHooks() {
 		Hyperban.default().then(function(Module) {
 			resolve({
 		                load: Module.cwrap('js_load_board', 'number', ['string']),
-		                draw: Module.cwrap('js_draw_graph', 'number', ['string', 'number', 'number', 'number', 'number', 'number', 'number']),
+		                draw: Module.cwrap('js_draw_graph', 'number', ['number', 'number', 'number', 'number', 'number', 'number', 'number']),
 		                dump_board: Module.cwrap('js_dump_board', null, ['number']),
 		                move: Module.cwrap('js_do_move', 'number', ['number', 'number']),
 		                unmove: Module.cwrap('js_undo_move', 'number', ['number']),
@@ -135,7 +135,7 @@ var HyperbanRenderer = {
        ctx.clearRect(0,0,t.width,t.height);
         if (vnode.attrs.Hooks.Board === null) return;
        ctx.save();
-        vnode.attrs.Hooks.draw(vnode.state.canvasid, pos, t.width, t.height, PROJECTION, move, progress);
+        vnode.attrs.Hooks.draw(vnode.state.canvasidptr, pos, t.width, t.height, PROJECTION, move, progress);
        ctx.restore();
     },
 
@@ -151,6 +151,11 @@ var HyperbanRenderer = {
     };
     document.addEventListener("keydown", vnode.state.handler);
     vnode.state.canvasid = "hyperban_canvas_" + +(new Date);
+    var M = vnode.attrs.Hooks.Module;
+    var len = M.lengthBytesUTF8(vnode.state.canvasid);
+    var p = M._malloc(len+1);
+    M.stringToUTF8(vnode.state.canvasid, p, len+1);
+    vnode.state.canvasidptr = p;
   },
   onremove: function(vnode) {
     document.removeEventListener('keydown', vnode.state.handler);
@@ -239,7 +244,12 @@ var HyperbanRenderer = {
         var start = null;
 
         function step(timestamp) {
-            if (!start) start = timestamp;
+            if (!start) {
+              start = timestamp;
+              vnode.state.animation = start;
+            } else if (vnode.state.animation !== start) {
+              return;
+            }
             var progress = Math.min((timestamp - start) / ANIM_TIME, 1);
             HyperbanRenderer.Draw(vnode, startPos, mv, progress);
             if (progress < 1) {
