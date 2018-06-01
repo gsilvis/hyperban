@@ -1,3 +1,4 @@
-*.o
+**/*.o
 node_modules
 dist
+web/renderer.*
