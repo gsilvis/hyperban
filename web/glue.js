@@ -70,7 +70,7 @@ function LoadLevels(Module, parent) {
     });
 }
 
-var Hooks = import('dist/renderer.js').then(function(Hyperban) {
+var Hooks = import('./renderer.js').then(function(Hyperban) {
 	console.log(Hyperban);
 	return new Promise(function(resolve) {
 		Hyperban.default().then(function(Module) {
@@ -106,7 +106,7 @@ Hooks.then(function(h) {
     LoadLevels(h.Module, document.getElementById('level'));
 
     // note this is a global
-    CTX = document.getElementById("canvas").getContext("2d");
+    var CTX = document.getElementById("canvas").getContext("2d");
 
     var modeLabel = document.getElementById("ModeIndicator");
     var unsolved = document.getElementById("unsolved_num"),

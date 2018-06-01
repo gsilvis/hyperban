@@ -1,3 +1,4 @@
 *.[ao]
 node_modules
 dist
+web/renderer.*

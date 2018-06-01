@@ -1,12 +1,28 @@
 const path = require('path');
 
 module.exports = {
-  entry: './web/glue.js',
+  entry: ['babel-polyfill', './web/glue.js'],
   output: {
-    filename: 'renderer.js',
+    filename: 'hyperban.js',
     path: path.resolve(__dirname, 'dist'),
   },
-  resolve: {
-    modules: ["./"]
-  }
+module: {
+  rules: [
+    {
+      test: /\.js$/,
+      exclude: /(node_modules|bower_components)/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env'],
+          plugins: [require("@babel/plugin-syntax-dynamic-import")],
+        }
+      }
+    }
+  ]
+},
+     stats: {
+         colors: true
+     },
+     devtool: 'source-map'
 };

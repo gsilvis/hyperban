@@ -46,7 +46,7 @@ all: make-dist build-module build-web
 make-dist:
 	mkdir -p dist
 
-build-module: dist/renderer.js
+build-module: web/renderer.js
 
 build-web: dist/hyperban.js dist/index.html
 
@@ -59,10 +59,10 @@ dist/index.html: web/index.html
 node_modules:
 	npm install
 
-dist/hyperban.js: node_modules webpack.config.js dist/renderer.js web/glue.js
+dist/hyperban.js: node_modules webpack.config.js web/renderer.js web/glue.js
 	./node_modules/.bin/webpack $(WEBPACK_FLAGS)
 
-dist/renderer.js: make-dist $(OFILES) module/cairo.js
+web/renderer.js: $(OFILES) module/cairo.js
 	emcc $(EMCC_FLAGS) -o $@ $(filter %.o, $^) $(LDFLAGS)
 
 %.o: %.c
