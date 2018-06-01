@@ -4,30 +4,6 @@
 <meta charset="UTF-8">
 </head>
 <body>
-<pre>Load a level, then use WASD to move. "you" are in the center. Push the blue boxes into the yellow squares. You can also press 'U' to undo a move.
-
-You can press 'm' to toggle EDITING mode. In Editing mode, you can modify the geometry of the game:
-  - Press F to make a FLOOR,  V to make a WALL or T to make a TARGET
-  - Press B to make a BOX and R to remove a BOX
-  - Press Q to rotate LEFT and E to rotate RIGHT
-
-The serialized board at the bottom will automatically update as you edit the board.
-</pre>
-<form name="config">
-<select id=level></select>
-<input type=button id=go value="Load!" disabled>
-<br/>
-<em id="ModeIndicator">Loading</em> Mode
-<br/>
-<input name="projection" type="radio" value="1" checked> <label>Poincare projection</label>
-<input name="projection" type="radio" value="0"> <label>Klein projection</label>
-<input name="projection" type="radio" value="2"> <label>Custom projection</label> <input type=range id=customrange min=0 max=10 step=0.1>
-</form>
-<canvas id="canvas" width="512" height="512">
-</canvas>
-<p id="game_status">Moves: <span id="moves_num">...</span> &nbsp;&nbsp; Unsolved Boxes: <span id="unsolved_num">...</span></p>
-<pre id=serial>
-</pre>
 <script src="hyperban.js"></script>
 </body>
 </html>

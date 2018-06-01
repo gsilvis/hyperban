@@ -28,6 +28,7 @@ EMCC_FLAGS += -s FORCE_FILESYSTEM=1
 EMCC_FLAGS += -s MODULARIZE=1
 EMCC_FLAGS += -s 'ENVIRONMENT="web"'
 EMCC_FLAGS += -s EXPORT_NAME="'Hyperban'"
+EMCC_FLAGS += -s WASM=0
 EMCC_FLAGS += -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS","cwrap"]'
 
 ifeq ($(MODE),DEBUG)
@@ -39,6 +40,10 @@ endif
 CFILES = module/renderer.c $(wildcard module/gui/*.c) $(wildcard module/graph/*.c)
 OFILES = $(patsubst %.c, %.o, $(CFILES))
 
+JSFILES = web/glue.js \
+	web/hyperban_component.js \
+	web/renderer.js
+
 .PHONY: all make-dist build-module build-web run-web
 
 all: make-dist build-module build-web
@@ -48,7 +53,7 @@ make-dist:
 
 build-module: web/renderer.js
 
-build-web: dist/hyperban.js dist/index.html
+build-web: dist/hyperban.js dist/index.html dist/renderer.data dist/renderer.js.mem
 
 run-web: build-web
 	cd dist; python -m SimpleHTTPServer 8080
@@ -59,11 +64,17 @@ dist/index.html: web/index.html
 node_modules:
 	npm install
 
-dist/hyperban.js: node_modules webpack.config.js web/renderer.js web/glue.js
+dist/hyperban.js: node_modules webpack.config.js $(JSFILES)
 	./node_modules/.bin/webpack $(WEBPACK_FLAGS)
 
-web/renderer.js: $(OFILES) module/cairo.js
+web/renderer.js web/renderer.data web/renderer.js.mem: $(OFILES) module/cairo.js
 	emcc $(EMCC_FLAGS) -o $@ $(filter %.o, $^) $(LDFLAGS)
+
+dist/renderer.data: web/renderer.data
+	cp $< $@
+
+dist/renderer.js.mem: web/renderer.js.mem
+	cp $< $@
 
 %.o: %.c
 	emcc -c -o $@ $^ $(CFLAGS) $(EMCC_FLAGS)
