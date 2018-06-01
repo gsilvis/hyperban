@@ -1,11 +1,23 @@
 const path = require('path');
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 
 module.exports = {
-  entry: ['babel-polyfill', './web/glue.js'],
+  entry: {
+    hyperban: ['babel-polyfill', './web/glue.js'],
+  },
   output: {
-    filename: 'hyperban.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
   },
+  plugins: [
+    new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: "[name].css",
+    })
+  ],
 module: {
   rules: [
     {
@@ -18,9 +30,35 @@ module: {
           plugins: [require("@babel/plugin-syntax-dynamic-import")],
         }
       }
-    }
+    },
+  {
+    test: /\.(scss)$/,
+    use: [MiniCssExtractPlugin.loader, 'css-loader',{
+      loader: 'postcss-loader', // Run post css actions
+      options: {
+        plugins: function () { // post css plugins, can be exported to postcss.config.js
+          return [
+            require('precss'),
+            require('autoprefixer')
+          ];
+        }
+      }
+    }, {
+      loader: 'sass-loader' // compiles Sass to CSS
+    }]
+  },
   ]
 },
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: true // set to true if you want JS source maps
+      }),
+      new OptimizeCSSAssetsPlugin({})
+    ]
+  },
      stats: {
          colors: true
      },

@@ -1,5 +1,7 @@
 import m from "mithril";
 
+import './custom.scss';
+
 var c = require('./hyperban_component.js')
 
 var help_text = `Load a level, then use WASD to move. "you" are in the center. Push the blue boxes into the yellow squares. You can also press 'U' to undo a move.
