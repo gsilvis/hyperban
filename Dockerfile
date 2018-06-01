@@ -1,16 +1,22 @@
-FROM apiaryio/emcc:1.37
-
-COPY Makefile /src
-COPY module /src/module
-COPY levels /src/levels
+FROM trzeci/emscripten:sdk-tag-1.38.3-64bit
 
 WORKDIR /src/
 
-RUN make
+COPY package.json /src
 
-COPY glue.js /src/
-COPY index.html /src/
+RUN npm install
+
+COPY Makefile /src/
+COPY module /src/module
+COPY levels /src/levels
+
+RUN mkdir web && make build-module
+
+COPY web /src/web
+COPY ./webpack.config.js /src/
+
+RUN make
 
 EXPOSE 8080
 
-CMD python -m SimpleHTTPServer 8080
+CMD make run-web
