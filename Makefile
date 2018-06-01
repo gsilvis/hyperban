@@ -29,7 +29,7 @@ EMCC_FLAGS += -s MODULARIZE=1
 EMCC_FLAGS += -s 'ENVIRONMENT="web"'
 EMCC_FLAGS += -s EXPORT_NAME="'Hyperban'"
 EMCC_FLAGS += -s WASM=0
-EMCC_FLAGS += -s --pre-js module/cairo_pre.js
+EMCC_FLAGS += --pre-js module/cairo_pre.js
 EMCC_FLAGS += -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS","cwrap","_malloc","stringToUTF8","lengthBytesUTF8"]'
 
 ifeq ($(MODE),DEBUG)
