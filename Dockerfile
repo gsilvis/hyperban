@@ -4,7 +4,7 @@ WORKDIR /src/
 
 COPY package.json /src
 
-RUN npm install
+RUN npm install --loglevel verbose
 
 COPY Makefile /src/
 COPY module /src/module
