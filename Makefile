@@ -32,6 +32,8 @@ EMCC_FLAGS += -s WASM=0
 EMCC_FLAGS += --pre-js module/cairo_pre.js
 EMCC_FLAGS += -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS","cwrap","_malloc","stringToUTF8","lengthBytesUTF8"]'
 
+WEBPACK_FLAGS := --color --progress
+
 ifeq ($(MODE),DEBUG)
 	WEBPACK_FLAGS += --mode=development
 else

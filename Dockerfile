@@ -15,7 +15,7 @@ RUN mkdir web && make build-module
 COPY web /src/web
 COPY ./webpack.config.js /src/
 
-RUN make
+RUN make; ls -lh dist
 
 EXPOSE 8080
 

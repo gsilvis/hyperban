@@ -279,13 +279,13 @@ GetHooks().then(function(Hooks) {
 var HyperbanComponent = {
   view: function(vnode) {
     if (GLOBALHOOKS === null) {
-      return m("div", "Loading...");
+      return <div class="row"><div class="col-sm">Loading...</div></div>;
     }
-    return m("div", [
-      m(HyperbanConfig, {Hooks: GLOBALHOOKS}),
-      m(HyperbanRenderer, {Hooks: GLOBALHOOKS}),
-      m(HyperbanStats, {Hooks: GLOBALHOOKS}),
-    ]);
+    return [
+      m("div.row", m("div.col-sm", m(HyperbanConfig, {Hooks: GLOBALHOOKS}))),
+      m("div.row", m("div.col-sm", m(HyperbanRenderer, {Hooks: GLOBALHOOKS}))),
+      m("div.row", m("div.col-sm", m(HyperbanStats, {Hooks: GLOBALHOOKS}))),
+    ];
   }
 }
 

@@ -27,7 +27,12 @@ module: {
         loader: 'babel-loader',
         options: {
           presets: ['@babel/preset-env'],
-          plugins: [require("@babel/plugin-syntax-dynamic-import")],
+          plugins: [
+		require("@babel/plugin-syntax-dynamic-import"),
+		  ["transform-react-jsx", {
+            "pragma": "m"
+        }]
+		],
         }
       }
     },
@@ -54,13 +59,12 @@ module: {
       new UglifyJsPlugin({
         cache: true,
         parallel: true,
-        sourceMap: true // set to true if you want JS source maps
+ //       sourceMap: true // set to true if you want JS source maps
       }),
       new OptimizeCSSAssetsPlugin({})
-    ]
+    ],
+//    splitChunks: { chunks: 'all' },
   },
-     stats: {
-         colors: true
-     },
-     devtool: 'source-map'
+//  mode: "production",
+//     devtool: 'source-map'
 };
