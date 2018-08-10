@@ -4,7 +4,7 @@ import m from "mithril";
 
 import './custom.scss';
 
-var HyperbanC = require('./hyperban_component.js')
+import { HyperbanConfig, HyperbanRenderer, HyperbanStats, GetHooks } from './hyperban_component.js';
 
 var help_text = `Load a level, then use WASD to move. "you" are in the center. Push the blue boxes into the yellow squares. You can also press 'U' to undo a move.
 
@@ -15,6 +15,12 @@ You can press 'm' to toggle EDITING mode. In Editing mode, you can modify the ge
 
 The serialized board at the bottom will automatically update as you edit the board.
 `;
+
+var GLOBALHOOKS = null;
+GetHooks().then(function(Hooks) {
+  GLOBALHOOKS = Hooks;
+  m.redraw();
+});
 
 var NavBar = {
   view: function(vnode) {
@@ -30,6 +36,8 @@ var NavBar = {
           <a class="nav-link" href="#">Link</a>
         </li>
       </ul>
+
+      <HyperbanConfig Hooks={vnode.attrs.Hooks}/>
     </nav>
     );
   },
@@ -39,6 +47,7 @@ var NavBarBottom = {
   view: function(vnode) {
     return (
     <nav class="navbar navbar-expand navbar-dark bg-dark fixed-bottom">
+/*
       <ul class="navbar-nav mr-auto">
         <li class="nav-item active">
           <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
@@ -47,6 +56,8 @@ var NavBarBottom = {
           <a class="nav-link" href="#">Link</a>
         </li>
       </ul>
+*/
+      <HyperbanStats Hooks={vnode.attrs.Hooks}/>
     </nav>
     );
   },
@@ -54,13 +65,16 @@ var NavBarBottom = {
 
 var Body = {
   view: function(vnode) {
+    if (GLOBALHOOKS === null) {
+      return <div class="row"><div class="col-sm">Loading...</div></div>;
+    }
     return [
-      <NavBar/>,
+      <NavBar Hooks={GLOBALHOOKS}/>,
       <div id="hyperban_div" class="container-fluid">
         <div class="row"><div class="col-sm"><pre>{help_text}</pre></div></div>
-        <HyperbanC/>
+        <div class="row"><div class="col-sm"><HyperbanRenderer Hooks={GLOBALHOOKS}/></div></div>
       </div>,
-      <NavBarBottom/>,
+      <NavBarBottom Hooks={GLOBALHOOKS}/>,
     ];
   },
 };

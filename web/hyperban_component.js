@@ -91,13 +91,13 @@ var HyperbanConfig = {
     vnode.state.current = vnode.state.levels[0];
   },
   view: function(vnode) {
-    return m("div", [
-      m("select", {onchange: function() {
+    return m("form.form-inline", [
+      m("select.form-control", {onchange: function() {
        vnode.state.current = this.value;
       }}, vnode.state.levels.map(function(x) {
         return m("option", {value: x, selected: x === vnode.state.current}, x);
        })),
-      m("input[type=button]", {value: "Load!", onclick: function() {
+      m("input[type=button].btn.btn", {value: "Load!", onclick: function() {
         vnode.attrs.Hooks.Board = vnode.attrs.Hooks.load(vnode.state.current);
       }}),
     ]);
@@ -113,6 +113,7 @@ var HyperbanStats = {
      var serialized = "";
      var board = vnode.attrs.Hooks.Board;
 
+/*
      if (board !== null) {
        h.dump_board(board);
        var serialized = h.Module.FS.readFile("/tmp_board.txt", {
@@ -124,6 +125,9 @@ var HyperbanStats = {
       "Moves: ", h.get_moves(board), " Unsolved Boxes: ", h.get_unsolved(board),
       m("pre#serial", serialized),
     ]);
+*/
+
+    return <span class='navbar-text'>Moves: {h.get_moves(board)} &nbsp;&nbsp; Unsolved Boxes: {h.get_unsolved(board)}</span>;
   }
 }
 
@@ -270,23 +274,9 @@ var HyperbanRenderer = {
   },
 }
 
-var GLOBALHOOKS = null;
-GetHooks().then(function(Hooks) {
-  GLOBALHOOKS = Hooks;
-  m.redraw();
-});
-
-var HyperbanComponent = {
-  view: function(vnode) {
-    if (GLOBALHOOKS === null) {
-      return <div class="row"><div class="col-sm">Loading...</div></div>;
-    }
-    return [
-      m("div.row", m("div.col-sm", m(HyperbanConfig, {Hooks: GLOBALHOOKS}))),
-      m("div.row", m("div.col-sm", m(HyperbanRenderer, {Hooks: GLOBALHOOKS}))),
-      m("div.row", m("div.col-sm", m(HyperbanStats, {Hooks: GLOBALHOOKS}))),
-    ];
-  }
-}
-
-module.exports = HyperbanComponent;
+module.exports = {
+  HyperbanConfig: HyperbanConfig,
+  HyperbanRenderer: HyperbanRenderer,
+  HyperbanStats: HyperbanStats,
+  GetHooks: GetHooks,
+};
